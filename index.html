@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Ledger — Share Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- html2canvas for image generation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root {
+    --ink: #182821;
+    --paper: #ece7d8;
+    --paper-line: #cfc7ac;
+    --panel: #f4f0e2;
+    --green-deep: #1d3b2c;
+    --green: #2c5c42;
+    --green-bright: #3f8562;
+    --gold: #b6903f;
+    --gold-soft: #e7d7ac;
+    --red: #9c3b34;
+    --red-soft: #f0d9d2;
+    --text: #1c2521;
+    --text-soft: #5b6a60;
+    --sidebar-bg: #142019;
+    --sidebar-text: #dfe4dc;
+    --sidebar-text-dim: #8ea295;
+    --border: #d8d0b8;
+    --shadow: rgba(20, 32, 25, 0.14);
+    --bg: var(--paper);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #e9e4d3; --paper: #1b241d; --paper-line: #34412f; --panel: #212b22;
+      --green-deep: #a9d3b8; --green: #7fbf98; --green-bright: #63e0a1;
+      --gold: #d9b466; --gold-soft: #3a3222; --red: #e08a7c; --red-soft: #3a2420;
+      --text: #ece7d8; --text-soft: #9aa89e; --sidebar-bg: #0d1410; --sidebar-text: #e3e8de;
+      --sidebar-text-dim: #7c9186; --border: #33402f; --shadow: rgba(0,0,0,0.4); --bg: var(--paper);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink: #e9e4d3; --paper: #1b241d; --paper-line: #34412f; --panel: #212b22;
+    --green-deep: #a9d3b8; --green: #7fbf98; --green-bright: #63e0a1;
+    --gold: #d9b466; --gold-soft: #3a3222; --red: #e08a7c; --red-soft: #3a2420;
+    --text: #ece7d8; --text-soft: #9aa89e; --sidebar-bg: #0d1410; --sidebar-text: #e3e8de;
+    --sidebar-text-dim: #7c9186; --border: #33402f; --shadow: rgba(0,0,0,0.4); --bg: var(--paper);
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    min-height: 100vh;
+  }
+  h1, h2, h3, .display {
+    font-family: 'Fraunces', Georgia, serif;
+    font-optical-sizing: auto;
+    color: var(--text);
+  }
+  input, button { font-size: 16px; }
+
+  .app {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    min-height: 100vh;
+  }
+
+  /* ---------- Sidebar (desktop) ---------- */
+  .sidebar {
+    background: var(--sidebar-bg);
+    color: var(--sidebar-text);
+    padding: 26px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .brand {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 21px;
+    letter-spacing: 0.2px;
+    color: var(--sidebar-text);
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+    padding-bottom: 14px;
+  }
+  .brand span { display: block; font-size: 11px; color: var(--sidebar-text-dim); font-family: 'IBM Plex Mono', monospace; margin-top: 4px; font-weight: 400; }
+  .sync-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 10.5px; color: var(--sidebar-text-dim); margin-top: 8px; }
+  .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: #6a7c72; }
+  .sync-dot.on { background: var(--green-bright); }
+  .sync-dot.busy { background: var(--gold); animation: pulse 1s infinite ease-in-out; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.35;} }
+
+  .person-list { display: flex; flex-direction: column; gap: 4px; }
+  .person-list-label { font-size: 11px; color: var(--sidebar-text-dim); margin-bottom: 4px; }
+  .person-search {
+    width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14);
+    color: var(--sidebar-text); padding: 9px 10px; border-radius: 4px;
+    font-family: 'IBM Plex Mono', monospace; margin-bottom: 8px;
+  }
+  .person-search::placeholder { color: var(--sidebar-text-dim); }
+  .person-search-mobile { margin-bottom: 10px; }
+  .no-match-note { font-size: 12px; color: var(--sidebar-text-dim); padding: 8px 4px; }
+  .person-item { display: flex; align-items: center; justify-content: space-between; padding: 11px 12px; border-radius: 4px; cursor: pointer; border: 1px solid transparent; font-size: 14px; }
+  .person-item:hover { background: rgba(255,255,255,0.05); }
+  .person-item.active { background: rgba(127, 191, 152, 0.12); border-color: rgba(127, 191, 152, 0.35); color: var(--green-bright); }
+  .person-actions { display: flex; align-items: center; gap: 4px; }
+  .person-item .edit-btn, .person-item .del-btn { font-size: 14px; color: var(--sidebar-text-dim); padding: 2px 6px; border-radius: 3px; line-height: 1; }
+  .person-item .edit-btn:hover { color: var(--green-bright); background: rgba(127,191,152,0.12); }
+  .person-item .del-btn:hover { color: var(--red); background: rgba(224,138,124,0.12); }
+
+  .add-person { display: flex; gap: 6px; margin-top: 4px; }
+  .add-person input { flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14); color: var(--sidebar-text); padding: 10px 10px; border-radius: 4px; font-family: 'IBM Plex Mono', monospace; }
+  .add-person input::placeholder { color: var(--sidebar-text-dim); }
+  .add-person button { background: var(--green); color: #0d1410; border: none; border-radius: 4px; padding: 8px 14px; font-weight: 600; cursor: pointer; }
+  .add-person button:active { background: var(--green-bright); }
+
+  .sidebar-foot { margin-top: auto; font-size: 11px; color: var(--sidebar-text-dim); border-top: 1px solid rgba(255,255,255,0.1); padding-top: 14px; line-height: 1.6; }
+
+  .mobile-topbar { display: none; }
+  @media (max-width: 860px) {
+    .app { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .mobile-topbar { display: block; background: var(--sidebar-bg); color: var(--sidebar-text); padding: 16px 16px 14px; position: sticky; top: 0; z-index: 10; }
+    .mobile-topbar .brand-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .mobile-topbar .brand-row .brand-mini { font-family: 'Fraunces', serif; font-weight: 600; font-size: 18px; color: var(--sidebar-text); }
+    .chip-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    .chip-row::-webkit-scrollbar { display: none; }
+    .chip { flex: 0 0 auto; padding: 9px 16px; border-radius: 20px; font-size: 13.5px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); color: var(--sidebar-text-dim); white-space: nowrap; }
+    .chip.active { background: rgba(127,191,152,0.18); border-color: var(--green-bright); color: var(--green-bright); }
+    .chip.add-chip { background: transparent; border: 1px dashed rgba(255,255,255,0.25); color: var(--sidebar-text-dim); }
+  }
+
+  .main { padding: 34px 40px 80px; max-width: 960px; }
+  @media (max-width: 860px) { .main { padding: 20px 16px 60px; } }
+
+  .empty-state { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; padding: 40px 0; max-width: 420px; }
+  .empty-state h2 { font-size: 24px; margin: 0; }
+  .empty-state p { color: var(--text-soft); font-size: 14px; line-height: 1.6; margin: 0; }
+
+  .ledger-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 6px; flex-wrap: wrap; }
+  .ledger-title { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .ledger-title h1 { font-size: 27px; margin: 0 0 2px; word-break: break-word; cursor: pointer; }
+  .ledger-title h1:hover { color: var(--green); text-decoration: underline dashed; }
+  .ledger-title .sub { color: var(--text-soft); font-size: 12.5px; width: 100%; }
+  
+  .head-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .btn-action { background: var(--panel); border: 1px solid var(--border); color: var(--text); padding: 9px 14px; border-radius: 4px; font-family: 'IBM Plex Mono', monospace; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; white-space: nowrap; }
+  .btn-action:hover { background: var(--border); }
+  .btn-action:disabled { opacity: 0.6; cursor: default; }
+
+  .date-field { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+  .date-field label { font-size: 11px; color: var(--text-soft); }
+  .date-field input[type=date] { font-family: 'IBM Plex Mono', monospace; color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 9px 10px; min-width: 0; }
+
+  .rule { height: 3px; background: var(--green-deep); margin: 16px 0 24px; border-radius: 2px; }
+
+  .rates-panel { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 16px 18px; margin-bottom: 18px; }
+  .rates-panel-head { display: flex; align-items: center; justify-content: space-between; cursor: pointer; gap: 10px; }
+  .rates-panel-head h3 { font-size: 14.5px; margin: 0; }
+  .rates-panel-head .hint { font-size: 11.5px; color: var(--text-soft); display: block; margin-top: 2px; font-weight: 400; }
+  .chevron { transition: transform 0.2s ease; color: var(--text-soft); font-size: 12px; flex: 0 0 auto; }
+  .rates-panel.collapsed .chevron { transform: rotate(-90deg); }
+  .rates-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-top: 16px; }
+  .payout-draw-block { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border); }
+  .payout-draw-block:first-of-type { margin-top: 16px; padding-top: 0; border-top: none; }
+  .rates-panel.collapsed .payout-draw-block { display: none; }
+  .payout-draw-label { font-family: 'Fraunces', serif; font-weight: 600; font-size: 13.5px; color: var(--text); margin-bottom: 4px; }
+  .rates-panel.collapsed .rates-grid, .rates-panel.collapsed .rate-note { display: none; }
+  .rate-field label { display: block; font-size: 11px; color: var(--text-soft); margin-bottom: 5px; }
+  .rate-input-wrap { position: relative; }
+  .rate-input-wrap input { width: 100%; padding: 11px 30px 11px 10px; font-family: 'IBM Plex Mono', monospace; border: 1px solid var(--border); border-radius: 4px; background: var(--bg); color: var(--text); }
+  .rate-input-wrap span { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--text-soft); font-size: 12px; pointer-events: none; }
+  .rate-note { font-size: 11.5px; color: var(--text-soft); margin-top: 14px; line-height: 1.5; }
+
+  .balance-row { display: flex; gap: 20px; align-items: center; margin-bottom: 26px; flex-wrap: wrap; }
+  .balance-field { display: flex; flex-direction: column; gap: 5px; flex: 1 1 180px; }
+  .balance-field label { font-size: 11px; color: var(--text-soft); }
+  .balance-field input { font-family: 'IBM Plex Mono', monospace; font-weight: 600; padding: 11px 12px; border: 1px solid var(--border); border-radius: 4px; background: var(--panel); color: var(--text); width: 100%; max-width: 220px; }
+
+  .draw-block { margin-bottom: 28px; }
+  .draw-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; border-bottom: 1px solid var(--paper-line); padding-bottom: 8px; }
+  .draw-head h3 { font-size: 17px; margin: 0; }
+  .draw-head .draw-total { margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 16px; }
+  .draw-total.neg { color: var(--red); }
+  .draw-total.pos { color: var(--green); }
+
+  .entry-rows { display: flex; flex-direction: column; gap: 6px; }
+  .entry-col-labels { display: grid; grid-template-columns: 1fr 108px 108px; gap: 8px; font-size: 10.5px; color: var(--text-soft); padding: 0 2px 2px; }
+  .entry-col-labels span:nth-child(2), .entry-col-labels span:nth-child(3) { text-align: right; }
+  .entry-row { display: grid; grid-template-columns: 1fr 108px 108px; gap: 8px; align-items: center; padding: 5px 2px; border-bottom: 1px dashed var(--paper-line); }
+  .entry-row .row-label { font-size: 13px; color: var(--text-soft); }
+  .entry-row.hits-row .row-label { color: var(--red); opacity: 0.9; }
+  .entry-row input { width: 100%; text-align: right; font-family: 'IBM Plex Mono', monospace; padding: 9px 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--panel); color: var(--text); }
+  .entry-row.hits-row input:not(.readonly) { color: var(--red); }
+  .entry-row input.readonly { background: transparent; border-color: transparent; color: var(--green); font-weight: 600; }
+  .entry-row.hits-row input.readonly { color: var(--red); }
+  .section-label { font-size: 11px; color: var(--text-soft); margin: 12px 2px 4px; }
+
+  @media (max-width: 480px) {
+    .entry-col-labels, .entry-row { grid-template-columns: 1fr 92px 92px; gap: 6px; }
+    .entry-row input { padding: 9px 6px; font-size: 13.5px; }
+  }
+
+  .breakdown { margin-top: 34px; background: var(--panel); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .breakdown-head { background: var(--green-deep); color: var(--gold-soft); padding: 12px 18px; font-family: 'Fraunces', serif; font-size: 15.5px; font-weight: 600; }
+  .breakdown table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .breakdown td { padding: 10px 18px; }
+  .breakdown tr:not(:last-child) td { border-bottom: 1px solid var(--border); }
+  .breakdown td:first-child { color: var(--text-soft); }
+  .breakdown td:last-child { text-align: right; font-family: 'IBM Plex Mono', monospace; font-weight: 500; }
+  .breakdown tr.overall td { font-weight: 700; font-size: 15.5px; color: var(--green); }
+  .breakdown tr.overall { background: rgba(127,191,152,0.08); }
+  .breakdown tr.overall td:first-child { color: var(--green); font-family: 'Fraunces', serif; }
+  .breakdown tr.today-total td { font-weight: 700; font-size: 14.5px; color: var(--text); border-top: 2px solid var(--border); }
+  .breakdown-input {
+    width: 130px; text-align: right; font-family: 'IBM Plex Mono', monospace; font-weight: 500;
+    padding: 7px 10px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg); color: var(--text);
+  }
+  .mini-add-btn {
+    display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px;
+    border-radius: 50%; border: 1px solid var(--border); background: var(--bg); color: var(--text-soft);
+    font-size: 13px; cursor: pointer; line-height: 1; vertical-align: middle; margin-left: 4px;
+  }
+  .mini-add-btn:hover { background: var(--border); color: var(--text); }
+  .others-item { display: flex; gap: 8px; align-items: center; padding: 4px 0; }
+  .others-label-input {
+    flex: 1; min-width: 0; font-family: 'IBM Plex Mono', monospace; padding: 7px 10px;
+    border: 1px solid var(--border); border-radius: 4px; background: var(--bg); color: var(--text);
+  }
+  .others-amount-input { width: 110px; flex: 0 0 auto; }
+  .others-remove-btn {
+    flex: 0 0 auto; width: 26px; height: 26px; border-radius: 4px; border: 1px solid var(--border);
+    background: var(--bg); color: var(--red); font-size: 16px; cursor: pointer; line-height: 1;
+  }
+  .others-remove-btn:hover { background: var(--red-soft); }
+
+  .autosave-note { margin-top: 16px; font-size: 11.5px; color: var(--text-soft); display: flex; align-items: center; gap: 6px; }
+  .autosave-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green-bright); }
+  .autosave-dot.busy { background: var(--gold); animation: pulse 1s infinite ease-in-out; }
+
+  .mini-modal-backdrop { position: fixed; inset: 0; background: rgba(10,15,12,0.5); display: flex; align-items: flex-end; justify-content: center; z-index: 50; }
+  .mini-modal { background: var(--panel); border-radius: 12px 12px 0 0; padding: 20px 18px 26px; width: 100%; max-width: 480px; }
+  @media (min-width: 520px) { .mini-modal-backdrop { align-items: center; } .mini-modal { border-radius: 10px; } }
+  .mini-modal h3 { margin: 0 0 12px; font-size: 17px; }
+  .mini-modal input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); font-family: 'IBM Plex Mono', monospace; margin-bottom: 12px; }
+  .mini-modal .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+  .mini-modal button { padding: 10px 16px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; }
+  .mini-modal .btn-cancel { background: transparent; color: var(--text-soft); }
+  .mini-modal .btn-add { background: var(--green); color: #fff; }
+
+  ::selection { background: var(--gold-soft); }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">Ledger<span>share &amp; commission calculator</span>
+      <div class="sync-pill"><span class="sync-dot" id="syncDot"></span><span id="syncLabel">Connecting…</span></div>
+    </div>
+
+    <div class="person-list">
+      <div class="person-list-label">Collectors</div>
+      <input id="personSearch" type="text" class="person-search" placeholder="Search collectors…">
+      <div id="personList"></div>
+      <div class="add-person">
+        <input id="newPersonName" type="text" placeholder="Add collector name">
+        <button id="addPersonBtn">+</button>
+      </div>
+    </div>
+
+    <div class="sidebar-foot">
+      Rates and entries sync automatically across your devices when signed in.<br>
+      Net share = gross &times; (1 &minus; rate). Payout = winning amount &times; (payout &divide; 10).
+    </div>
+  </aside>
+
+  <div class="mobile-topbar">
+    <div class="brand-row">
+      <span class="brand-mini">Ledger</span>
+      <span class="sync-pill"><span class="sync-dot" id="syncDotMobile"></span><span id="syncLabelMobile">Connecting…</span></span>
+    </div>
+    <input id="personSearchMobile" type="text" class="person-search person-search-mobile" placeholder="Search collectors…">
+    <div class="chip-row" id="chipRow"></div>
+  </div>
+
+  <main class="main" id="mainArea"></main>
+</div>
+
+<div id="modalRoot"></div>
+
+<script>
+(function() {
+  "use strict";
+
+  const GAME_TYPES = [
+    { key: 'L2', label: '2-Digit', defaultRate: 14, defaultPayout: 800 },
+    { key: 'S3', label: '3-Digit', defaultRate: 30, defaultPayout: 6000 },
+    { key: 'D4', label: '4-Digit', defaultRate: 30, defaultPayout: 40000 },
+    { key: 'P3', label: 'Pick 3',  defaultRate: 30, defaultPayout: 4500 },
+    { key: 'LB', label: 'Labay',   defaultRate: 12, defaultPayout: 0 }
+  ];
+  const DRAWS = ['2PM', '5PM', '9PM'];
+  // Which game types show a Gross/Hits row under each draw — 4-Digit and Pick 3 only run at 9PM.
+  const DRAW_ROW_KEYS = {
+    '2PM': ['L2', 'S3', 'LB'],
+    '5PM': ['L2', 'S3', 'LB'],
+    '9PM': ['L2', 'S3', 'D4', 'P3', 'LB']
+  };
+  const LS_KEY = 'ledger_share_calc_v1';
+  const SEED_FLAG = 'ledger_seeded_v1';
+
+  function uid() { return Math.random().toString(36).slice(2, 10); }
+  function todayISO() { return new Date().toISOString().slice(0, 10); }
+  function money(n) {
+    n = Number(n) || 0;
+    const neg = n < 0;
+    const v = Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    return (neg ? '-' : '') + v;
+  }
+  function defaultRates() { const r = {}; GAME_TYPES.forEach(g => r[g.key] = g.defaultRate); return r; }
+  function defaultPayouts() { const r = {}; GAME_TYPES.forEach(g => r[g.key] = g.defaultPayout); return r; }
+  // Payout rates are stored per draw: { '2PM': {L2:800,...}, '5PM': {...}, '9PM': {...} }.
+  // This also migrates the older flat format ({L2:800,...} applied to every draw) transparently.
+  function normalizePayoutRates(raw) {
+    const result = {};
+    DRAWS.forEach(d => { result[d] = defaultPayouts(); });
+    if (raw && typeof raw === 'object') {
+      const isNested = DRAWS.some(d => raw[d] && typeof raw[d] === 'object');
+      if (isNested) {
+        DRAWS.forEach(d => {
+          if (raw[d]) {
+            GAME_TYPES.forEach(g => { if (raw[d][g.key] !== undefined) result[d][g.key] = raw[d][g.key]; });
+          }
+        });
+      } else {
+        GAME_TYPES.forEach(g => {
+          if (raw[g.key] !== undefined) { DRAWS.forEach(d => { result[d][g.key] = raw[g.key]; }); }
+        });
+      }
+    }
+    return result;
+  }
+  function emptyDrawEntry() {
+    const gross = {}, hits = {};
+    GAME_TYPES.forEach(g => { gross[g.key] = ''; hits[g.key] = ''; });
+    return { gross, hits };
+  }
+  function emptyDrawsObj() { const draws = {}; DRAWS.forEach(d => draws[d] = emptyDrawEntry()); return draws; }
+  function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function debounce(fn, ms) { let t = null; return function(...args) { clearTimeout(t); t = setTimeout(() => fn.apply(null, args), ms); }; }
+  // Some phone locales make <input type="number"> render/accept a comma as the decimal
+  // separator (e.g. showing "34070,37"), which then fails to parse as a number. Using
+  // type="text" for these fields plus this sanitizer keeps everything on a plain "." decimal
+  // regardless of the device's locale.
+  function sanitizeNumericInput(str) {
+    let s = String(str == null ? '' : str).replace(/,/g, '.');
+    s = s.replace(/[^0-9.\-]/g, '');
+    s = s.replace(/(?!^)-/g, '');
+    const firstDot = s.indexOf('.');
+    if (firstDot !== -1) s = s.slice(0, firstDot + 1) + s.slice(firstDot + 1).replace(/\./g, '');
+    return s;
+  }
+
+  // ---------------- App state ----------------
+  let persons = [];              
+  let activePersonId = null;
+  let activeDate = todayISO();
+  let activeRecord = null;
+  let ratesCollapsed = false;
+  let payoutCollapsed = true;
+  let dbMode = false;
+  let db = null;
+  let syncBusy = false;
+  let recordLoadToken = 0;
+
+  function lsLoadAll() {
+    try { const raw = localStorage.getItem(LS_KEY); if (raw) return JSON.parse(raw); } catch (e) {}
+    return { persons: [] };
+  }
+  function lsSaveAll(data) { try { localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch (e) {} }
+
+  function setSyncStatus(mode) {
+    const dots = [document.getElementById('syncDot'), document.getElementById('syncDotMobile')];
+    const labels = [document.getElementById('syncLabel'), document.getElementById('syncLabelMobile')];
+    let cls = '', text = '';
+    if (mode === 'connecting') { cls = ''; text = 'Connecting…'; }
+    else if (mode === 'local') { cls = ''; text = 'Saved on this device only'; }
+    else if (mode === 'busy') { cls = 'busy'; text = 'Syncing…'; }
+    else { cls = 'on'; text = 'Synced across devices'; }
+    dots.forEach(d => { if (d) d.className = 'sync-dot ' + cls; });
+    labels.forEach(l => { if (l) l.textContent = text; });
+  }
+
+  // ---------------- Compute ----------------
+  function computeDraw(person, drawEntry, drawName) {
+    let netSum = 0, hitsSum = 0;
+    const lines = [];
+    const drawPayoutRates = (person.payoutRates && person.payoutRates[drawName]) ? person.payoutRates[drawName] : defaultPayouts();
+    GAME_TYPES.forEach(g => {
+      const grossVal = parseFloat(drawEntry.gross[g.key]);
+      const hitVal = parseFloat(drawEntry.hits[g.key]);
+      const rate = parseFloat(person.rates[g.key]) || 0;
+      const payoutRate = parseFloat(drawPayoutRates[g.key]) || 0;
+      const gross = isNaN(grossVal) ? 0 : grossVal;
+      const hitWinAmt = isNaN(hitVal) ? 0 : hitVal;
+      const net = gross * (1 - rate / 100);
+      const hitPayout = hitWinAmt * (payoutRate / 10);
+      if (gross !== 0) netSum += net;
+      if (hitWinAmt !== 0) hitsSum += hitPayout;
+      lines.push({ key: g.key, gross, net, hitWinAmt, hitPayout });
+    });
+    return { lines, netSum, hitsSum, total: netSum - hitsSum };
+  }
+  function computeDay(person, record) {
+    const perDraw = {}; let dayTotal = 0;
+    DRAWS.forEach(d => { const c = computeDraw(person, record.draws[d], d); perDraw[d] = c; dayTotal += c.total; });
+    return { perDraw, dayTotal };
+  }
+  function computeOverall(person, record) {
+    const { dayTotal, perDraw } = computeDay(person, record);
+    const prev = parseFloat(record.previousBalance);
+    const prevVal = isNaN(prev) ? 0 : prev;
+    const cashInVal = parseFloat(record.cashIn);
+    const tulakVal = parseFloat(record.tulak);
+    const cashIn = isNaN(cashInVal) ? 0 : cashInVal;
+    const tulak = isNaN(tulakVal) ? 0 : tulakVal;
+    const others = (record.othersList || []).reduce((sum, item) => {
+      const v = parseFloat(item.amount);
+      return sum + (isNaN(v) ? 0 : v);
+    }, 0);
+    return { dayTotal, perDraw, cashIn, tulak, others, overall: round2(prevVal + dayTotal + cashIn - tulak - others) };
+  }
+  function round2(n) {
+    const v = Number(n);
+    if (isNaN(v)) return n;
+    return Math.round((v + (v >= 0 ? 1 : -1) * 1e-9) * 100) / 100;
+  }
+  function getActivePerson() { return persons.find(p => p.id === activePersonId) || null; }
+
+  // ---------------- Person actions ----------------
+  async function addPerson(name, opts) {
+    name = (name || '').trim();
+    if (!name) return null;
+    const rates = (opts && opts.rates) || defaultRates();
+    const payoutRates = normalizePayoutRates((opts && opts.payoutRates) || null);
+    if (dbMode) {
+      syncBusy = true; setSyncStatus('busy');
+      let newId = null;
+      try {
+        const ref = await db.collection('persons').add({ name, rates, payoutRates, createdAt: Date.now() });
+        newId = ref.id;
+        activePersonId = ref.id;
+      } catch (e) { console.error(e); }
+      syncBusy = false; setSyncStatus('synced');
+      return newId;
+    } else {
+      const p = { id: uid(), name, rates, payoutRates };
+      persons.push(p);
+      activePersonId = p.id;
+      persistLocalPersons();
+      switchToPerson(p.id);
+      return p.id;
+    }
+  }
+
+  async function updatePersonName(id, newName) {
+    newName = (newName || '').trim();
+    if (!newName) return;
+    const p = persons.find(x => x.id === id);
+    if (!p) return;
+    p.name = newName;
+    if (dbMode) {
+      syncBusy = true; setSyncStatus('busy');
+      try { await db.doc('persons/' + id).update({ name: newName }); } catch (e) { console.error(e); }
+      syncBusy = false; setSyncStatus('synced');
+    } else {
+      persistLocalPersons();
+    }
+    renderAll();
+  }
+
+  async function deletePerson(id) {
+    if (dbMode) {
+      syncBusy = true; setSyncStatus('busy');
+      try { await db.doc('persons/' + id).delete(); } catch (e) { console.error(e); }
+      syncBusy = false; setSyncStatus('synced');
+    } else {
+      persons = persons.filter(p => p.id !== id);
+      persistLocalPersons();
+      if (activePersonId === id) {
+        activePersonId = persons.length ? persons[0].id : null;
+        if (activePersonId) switchToPerson(activePersonId); else { activeRecord = null; renderAll(); }
+      } else { renderAll(); }
+    }
+  }
+
+  function persistLocalPersons() {
+    const data = lsLoadAll();
+    data.persons = persons.map(p => {
+      const existing = (data.persons || []).find(x => x.id === p.id) || {};
+      return Object.assign({}, existing, { id: p.id, name: p.name, rates: p.rates, payoutRates: p.payoutRates, records: existing.records || {} });
+    });
+    lsSaveAll(data);
+  }
+
+  const persistRatesDebounced = debounce(async (personId, rates) => {
+    if (dbMode) {
+      syncBusy = true; setSyncStatus('busy');
+      try { await db.doc('persons/' + personId).update({ rates }); } catch (e) { console.error(e); }
+      syncBusy = false; setSyncStatus('synced');
+    } else { persistLocalPersons(); }
+  }, 450);
+
+  const persistPayoutsDebounced = debounce(async (personId, payoutRates) => {
+    if (dbMode) {
+      syncBusy = true; setSyncStatus('busy');
+      try { await db.doc('persons/' + personId).update({ payoutRates }); } catch (e) { console.error(e); }
+      syncBusy = false; setSyncStatus('synced');
+    } else { persistLocalPersons(); }
+  }, 450);
+
+  function updateRate(personId, gameKey, value) {
+    const p = persons.find(x => x.id === personId); if (!p) return;
+    p.rates[gameKey] = value;
+    persistRatesDebounced(personId, p.rates);
+  }
+  function updatePayout(personId, drawName, gameKey, value) {
+    const p = persons.find(x => x.id === personId); if (!p) return;
+    if (!p.payoutRates) p.payoutRates = normalizePayoutRates(null);
+    if (!p.payoutRates[drawName]) p.payoutRates[drawName] = defaultPayouts();
+    p.payoutRates[drawName][gameKey] = value;
+    persistPayoutsDebounced(personId, p.payoutRates);
+  }
+
+  // ---------------- Record load/save ----------------
+  function normalizeRecord(raw) {
+    const r = { previousBalance: '', cashIn: '', tulak: '', othersList: [], draws: emptyDrawsObj() };
+    if (!raw) return r;
+    if (raw.previousBalance !== undefined) r.previousBalance = raw.previousBalance;
+    if (raw.cashIn !== undefined) r.cashIn = raw.cashIn;
+    if (raw.tulak !== undefined) r.tulak = raw.tulak;
+    if (raw.othersList && Array.isArray(raw.othersList)) {
+      r.othersList = raw.othersList.map(item => ({ id: item.id || uid(), label: item.label || '', amount: item.amount }));
+    } else if (raw.others !== undefined && raw.others !== '' && raw.others !== null) {
+      r.othersList = [{ id: uid(), label: 'Others', amount: raw.others }];
+    }
+    if (raw.draws) {
+      DRAWS.forEach(d => {
+        if (raw.draws[d]) {
+          GAME_TYPES.forEach(g => {
+            if (raw.draws[d].gross && raw.draws[d].gross[g.key] !== undefined) r.draws[d].gross[g.key] = raw.draws[d].gross[g.key];
+            if (raw.draws[d].hits && raw.draws[d].hits[g.key] !== undefined) r.draws[d].hits[g.key] = raw.draws[d].hits[g.key];
+          });
+        }
+      });
+    }
+    return r;
+  }
+
+  async function carryForwardBalance(personId, date) {
+    if (dbMode) {
+      try {
+        const q = db.collection('persons/' + personId + '/records').where('date', '<', date).orderBy('date', 'desc').limit(1);
+        const snap = await q.get();
+        if (!snap.empty) {
+          const prevRecord = normalizeRecord(snap.docs[0].data());
+          return computeOverall(getActivePerson(), prevRecord).overall;
+        }
+      } catch (e) { console.error(e); }
+      return '';
+    } else {
+      const data = lsLoadAll();
+      const entry = (data.persons || []).find(x => x.id === personId);
+      if (!entry || !entry.records) return '';
+      const prevDates = Object.keys(entry.records).filter(d => d < date).sort();
+      if (!prevDates.length) return '';
+      const lastRec = normalizeRecord(entry.records[prevDates[prevDates.length - 1]]);
+      return computeOverall(getActivePerson(), lastRec).overall;
+    }
+  }
+
+  async function loadRecord(personId, date) {
+    const myToken = ++recordLoadToken;
+    const person = getActivePerson();
+    if (!person) return;
+
+    if (dbMode) {
+      try {
+        const ref = db.doc('persons/' + personId + '/records/' + date);
+        const snap = await ref.get();
+        if (myToken !== recordLoadToken) return;
+        if (snap.exists) { activeRecord = normalizeRecord(snap.data()); }
+        else {
+          const carried = await carryForwardBalance(personId, date);
+          if (myToken !== recordLoadToken) return;
+          activeRecord = { previousBalance: carried, cashIn: '', tulak: '', othersList: [], draws: emptyDrawsObj() };
+        }
+      } catch (e) {
+        if (myToken !== recordLoadToken) return;
+        console.error(e);
+        activeRecord = { previousBalance: '', cashIn: '', tulak: '', othersList: [], draws: emptyDrawsObj() };
+      }
+    } else {
+      if (myToken !== recordLoadToken) return;
+      const data = lsLoadAll();
+      const entry = (data.persons || []).find(x => x.id === personId);
+      if (entry && entry.records && entry.records[date]) { activeRecord = normalizeRecord(entry.records[date]); }
+      else {
+        const carried = await carryForwardBalance(personId, date);
+        if (myToken !== recordLoadToken) return;
+        activeRecord = { previousBalance: carried, cashIn: '', tulak: '', othersList: [], draws: emptyDrawsObj() };
+      }
+    }
+    if (myToken === recordLoadToken) {
+      renderMain();
+    }
+  }
+
+  const persistRecordDebounced = debounce(async (personId, date, record) => {
+    const payload = { date, previousBalance: record.previousBalance, cashIn: record.cashIn, tulak: record.tulak, othersList: record.othersList, draws: record.draws };
+    if (dbMode) {
+      syncBusy = true; setSyncStatus('busy');
+      try { await db.doc('persons/' + personId + '/records/' + date).set(payload); } catch (e) { console.error(e); }
+      syncBusy = false; setSyncStatus('synced');
+    } else {
+      const data = lsLoadAll();
+      const entry = (data.persons || []).find(x => x.id === personId);
+      if (entry) { entry.records = entry.records || {}; entry.records[date] = payload; lsSaveAll(data); }
+    }
+  }, 500);
+
+  async function saveRecordImmediate(personId, date, record) {
+    const payload = { date, previousBalance: record.previousBalance, cashIn: record.cashIn, tulak: record.tulak, othersList: record.othersList, draws: record.draws };
+    if (dbMode) {
+      try { await db.doc('persons/' + personId + '/records/' + date).set(payload); } catch (e) { console.error(e); }
+    } else {
+      const data = lsLoadAll();
+      const entry = (data.persons || []).find(x => x.id === personId);
+      if (entry) { entry.records = entry.records || {}; entry.records[date] = payload; lsSaveAll(data); }
+    }
+  }
+
+  async function handleSaveRecordClick(person, record) {
+    const btn = document.getElementById('saveRecordBtn');
+    if (!person || !record) return;
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+    try {
+      await saveRecordImmediate(person.id, activeDate, record);
+      if (btn) { btn.textContent = '✓ Saved'; }
+    } catch (e) {
+      console.error(e);
+      if (btn) { btn.textContent = 'Save failed'; }
+    }
+    setTimeout(() => { if (btn) { btn.disabled = false; btn.textContent = '💾 Save Record'; } }, 1400);
+  }
+
+  async function handleClearDrawsClick(person, record) {
+    const btn = document.getElementById('clearDrawsBtn');
+    if (!person || !record) return;
+    if (!confirm('Clear all 2PM, 5PM, 9PM entries plus Cash-in, Tulak and Others for this date? Previous balance stays as is.')) return;
+    record.draws = emptyDrawsObj();
+    record.cashIn = '';
+    record.tulak = '';
+    record.othersList = [];
+    if (btn) { btn.disabled = true; btn.textContent = 'Clearing…'; }
+    try {
+      await saveRecordImmediate(person.id, activeDate, record);
+    } catch (e) {
+      console.error(e);
+    }
+    renderMain();
+  }
+
+  async function handleRecalcPrevBalance(person, record) {
+    const btn = document.getElementById('recalcPrevBtn');
+    if (!person || !record) return;
+    if (btn) { btn.disabled = true; btn.textContent = 'Checking…'; }
+    try {
+      const carried = await carryForwardBalance(person.id, activeDate);
+      record.previousBalance = carried === '' ? '' : round2(carried);
+      await saveRecordImmediate(person.id, activeDate, record);
+    } catch (e) {
+      console.error(e);
+    }
+    renderMain();
+  }
+
+  function switchToPerson(id) {
+    activePersonId = id;
+    activeDate = todayISO();
+    activeRecord = null;
+    renderAll();
+    loadRecord(id, activeDate);
+  }
+  function switchToDate(date) {
+    activeDate = date;
+    activeRecord = null;
+    renderMain();
+    loadRecord(activePersonId, date);
+  }
+
+  // ---------------- Modals (Add / Edit) ----------------
+  function openAddPersonModal() {
+    const root = document.getElementById('modalRoot');
+    root.innerHTML = `
+      <div class="mini-modal-backdrop" id="modalBackdrop">
+        <div class="mini-modal">
+          <h3>Add collector</h3>
+          <input id="modalNameInput" type="text" placeholder="Collector name" autofocus>
+          <div class="modal-actions">
+            <button class="btn-cancel" id="modalCancel">Cancel</button>
+            <button class="btn-add" id="modalAdd">Add</button>
+          </div>
+        </div>
+      </div>`;
+    const backdrop = document.getElementById('modalBackdrop');
+    const input = document.getElementById('modalNameInput');
+    input.focus();
+    document.getElementById('modalCancel').addEventListener('click', () => root.innerHTML = '');
+    backdrop.addEventListener('click', (e) => { if (e.target === backdrop) root.innerHTML = ''; });
+    function submit() { addPerson(input.value); root.innerHTML = ''; }
+    document.getElementById('modalAdd').addEventListener('click', submit);
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
+  }
+
+  function openEditPersonModal(person) {
+    const root = document.getElementById('modalRoot');
+    root.innerHTML = `
+      <div class="mini-modal-backdrop" id="modalBackdrop">
+        <div class="mini-modal">
+          <h3>Edit collector name</h3>
+          <input id="modalNameInput" type="text" value="${escapeHtml(person.name)}" autofocus>
+          <div class="modal-actions">
+            <button class="btn-cancel" id="modalCancel">Cancel</button>
+            <button class="btn-add" id="modalSave">Save</button>
+          </div>
+        </div>
+      </div>`;
+    const backdrop = document.getElementById('modalBackdrop');
+    const input = document.getElementById('modalNameInput');
+    input.focus();
+    input.select();
+    document.getElementById('modalCancel').addEventListener('click', () => root.innerHTML = '');
+    backdrop.addEventListener('click', (e) => { if (e.target === backdrop) root.innerHTML = ''; });
+    function submit() { updatePersonName(person.id, input.value); root.innerHTML = ''; }
+    document.getElementById('modalSave').addEventListener('click', submit);
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
+  }
+
+  // ---------------- Backup / Restore ----------------
+  async function collectAllData() {
+    if (dbMode) {
+      const result = { persons: [] };
+      for (const p of persons) {
+        const entry = { id: p.id, name: p.name, rates: p.rates, payoutRates: p.payoutRates, records: {} };
+        try {
+          const snap = await db.collection('persons/' + p.id + '/records').get();
+          snap.docs.forEach(d => { entry.records[d.id] = d.data(); });
+        } catch (e) { console.error(e); }
+        result.persons.push(entry);
+      }
+      return result;
+    } else {
+      return lsLoadAll();
+    }
+  }
+
+  async function exportBackup() {
+    const backupBtn = document.getElementById('backupBtn');
+    if (backupBtn) { backupBtn.disabled = true; backupBtn.textContent = 'Preparing…'; }
+    try {
+      const data = await collectAllData();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.download = `ledger-backup-${todayISO()}.json`;
+      link.href = url;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error(e);
+      alert('Could not create backup.');
+    }
+    if (backupBtn) { backupBtn.disabled = false; backupBtn.textContent = '⬇ Backup'; }
+  }
+
+  async function importBackup(file) {
+    let data;
+    try {
+      const text = await file.text();
+      data = JSON.parse(text);
+    } catch (e) {
+      alert('That file could not be read as a backup.');
+      return;
+    }
+    if (!data || !Array.isArray(data.persons)) {
+      alert('That file does not look like a ledger backup.');
+      return;
+    }
+    if (!confirm('Restore will add every collector and entry from this file. Existing collectors with the same name will not be merged — continue?')) return;
+
+    const restoreBtn = document.getElementById('restoreBtn');
+    if (restoreBtn) { restoreBtn.disabled = true; restoreBtn.textContent = 'Restoring…'; }
+
+    try {
+      if (dbMode) {
+        for (const p of data.persons) {
+          const rates = Object.assign(defaultRates(), p.rates || {});
+          const payoutRates = normalizePayoutRates(p.payoutRates);
+          const ref = await db.collection('persons').add({ name: p.name, rates, payoutRates, createdAt: Date.now() });
+          const records = p.records || {};
+          for (const dateKey of Object.keys(records)) {
+            await db.doc('persons/' + ref.id + '/records/' + dateKey).set(records[dateKey]);
+          }
+        }
+      } else {
+        const current = lsLoadAll();
+        current.persons = (current.persons || []).concat(data.persons.map(p => ({
+          id: uid(), name: p.name,
+          rates: Object.assign(defaultRates(), p.rates || {}),
+          payoutRates: normalizePayoutRates(p.payoutRates),
+          records: p.records || {}
+        })));
+        lsSaveAll(current);
+      }
+      alert('Backup restored.');
+      location.reload();
+    } catch (e) {
+      console.error(e);
+      alert('Restore failed partway through — check the console for details.');
+    } finally {
+      if (restoreBtn) { restoreBtn.disabled = false; restoreBtn.textContent = '⬆ Restore'; }
+    }
+  }
+
+  // ---------------- Image Generation ----------------
+  // html2canvas can't reliably capture live <input> values or CSS custom properties,
+  // which is why the old "Save Image" button produced blank/broken screenshots. Instead we
+  // build a plain, hardcoded-color, text-only copy of the ledger off-screen and capture that.
+  let isGeneratingImage = false;
+
+  function buildPrintableSheet(person, record) {
+    const { perDraw, dayTotal, overall, cashIn, tulak, others } = computeOverall(person, record);
+    const dateObj = new Date(activeDate + 'T00:00:00');
+    const dateLabel = isNaN(dateObj.getTime()) ? activeDate : dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    const C = { ink: '#1c2521', paper: '#ece7d8', panel: '#f4f0e2', border: '#d8d0b8',
+      greenDeep: '#1d3b2c', green: '#2c5c42', goldSoft: '#e7d7ac', red: '#9c3b34', textSoft: '#5b6a60' };
+
+    const drawSection = (drawName) => {
+      const computed = perDraw[drawName];
+      const rowTypes = GAME_TYPES.filter(g => (DRAW_ROW_KEYS[drawName] || []).includes(g.key));
+      const totalColor = computed.total < 0 ? C.red : C.green;
+      const gameRows = rowTypes.map(g => {
+        const line = computed.lines.find(l => l.key === g.key);
+        return `<tr>
+          <td style="padding:6px 4px;font-size:13px;color:${C.ink};font-weight:600;">${g.label}</td>
+          <td style="padding:6px 4px;font-size:13px;text-align:right;">${money(line.gross)}</td>
+          <td style="padding:6px 4px;font-size:13px;text-align:right;font-weight:600;color:${C.green};">${money(line.net)}</td>
+        </tr>`;
+      }).join('');
+      const hitRows = rowTypes.map(g => {
+        const line = computed.lines.find(l => l.key === g.key);
+        return `<tr>
+          <td style="padding:6px 4px;font-size:13px;color:${C.red};font-weight:600;opacity:0.9;">${g.label}</td>
+          <td style="padding:6px 4px;font-size:13px;text-align:right;color:${C.red};">${money(line.hitWinAmt)}</td>
+          <td style="padding:6px 4px;font-size:13px;text-align:right;font-weight:600;color:${C.red};">${money(line.hitPayout)}</td>
+        </tr>`;
+      }).join('');
+      return `
+        <div style="margin-bottom:16px;">
+          <div style="display:flex;align-items:baseline;border-bottom:1px solid ${C.border};padding-bottom:6px;margin-bottom:4px;">
+            <span style="font-family:'Fraunces',Georgia,serif;font-size:16px;font-weight:600;color:${C.ink};">${drawName}</span>
+            <span style="margin-left:auto;font-weight:700;font-size:15px;color:${totalColor};">${money(computed.total)}</span>
+          </div>
+          <table style="width:100%;border-collapse:collapse;">
+            <tr>
+              <td style="padding:2px 4px 4px;"></td>
+              <td style="padding:2px 4px 4px;font-size:10px;color:${C.textSoft};text-align:right;">Gross</td>
+              <td style="padding:2px 4px 4px;font-size:10px;color:${C.textSoft};text-align:right;">Net share</td>
+            </tr>
+            ${gameRows}
+            <tr>
+              <td colspan="3" style="padding:9px 4px 2px;font-size:10px;color:${C.textSoft};border-top:1px dashed ${C.border};">Hits</td>
+            </tr>
+            <tr>
+              <td style="padding:0 4px 4px;"></td>
+              <td style="padding:0 4px 4px;font-size:10px;color:${C.textSoft};text-align:right;">Winning amt</td>
+              <td style="padding:0 4px 4px;font-size:10px;color:${C.textSoft};text-align:right;">Payout</td>
+            </tr>
+            ${hitRows}
+          </table>
+        </div>`;
+    };
+
+    return `
+      <div id="printSheetInner" style="width:460px;background:${C.paper};color:${C.ink};font-family:'IBM Plex Mono',ui-monospace,monospace;padding:26px;border:1px solid ${C.border};box-sizing:border-box;">
+        <div style="font-family:'Fraunces',Georgia,serif;font-size:24px;font-weight:600;color:${C.ink};">${escapeHtml(person.name)}</div>
+        <div style="font-size:12px;color:${C.textSoft};margin-bottom:10px;">${dateLabel}</div>
+        <div style="height:3px;background:${C.greenDeep};border-radius:2px;margin:10px 0 18px;"></div>
+        ${DRAWS.map(drawSection).join('')}
+        <div style="background:${C.panel};border:1px solid ${C.border};border-radius:6px;overflow:hidden;margin-top:8px;">
+          <div style="background:${C.greenDeep};color:${C.goldSoft};padding:10px 16px;font-family:'Fraunces',Georgia,serif;font-size:14px;font-weight:600;">Breakdown</div>
+          <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <tr><td style="padding:8px 16px;color:${C.textSoft};border-bottom:1px solid ${C.border};">Previous balance</td><td style="padding:8px 16px;text-align:right;border-bottom:1px solid ${C.border};">${money(record.previousBalance || 0)}</td></tr>
+            ${DRAWS.map(d => `<tr><td style="padding:8px 16px;color:${C.textSoft};border-bottom:1px solid ${C.border};">${d}</td><td style="padding:8px 16px;text-align:right;border-bottom:1px solid ${C.border};">${money(perDraw[d].total)}</td></tr>`).join('')}
+            ${cashIn ? `<tr><td style="padding:8px 16px;color:${C.textSoft};border-bottom:1px solid ${C.border};">Cash-in</td><td style="padding:8px 16px;text-align:right;border-bottom:1px solid ${C.border};">${money(cashIn)}</td></tr>` : ''}
+            ${tulak ? `<tr><td style="padding:8px 16px;color:${C.textSoft};border-bottom:1px solid ${C.border};">Tulak</td><td style="padding:8px 16px;text-align:right;color:${C.red};border-bottom:1px solid ${C.border};">-${money(tulak)}</td></tr>` : ''}
+            ${others ? `<tr><td style="padding:8px 16px;color:${C.textSoft};border-bottom:1px solid ${C.border};">Others</td><td style="padding:8px 16px;border-bottom:1px solid ${C.border};"></td></tr>` : ''}
+            ${(record.othersList || []).filter(item => parseFloat(item.amount) || item.label).map(item => `<tr><td style="padding:5px 16px 5px 28px;font-size:12px;color:${C.textSoft};border-bottom:1px dashed ${C.border};">${escapeHtml(item.label || 'Others')}</td><td style="padding:5px 16px;text-align:right;font-size:12px;color:${C.red};border-bottom:1px dashed ${C.border};">-${money(item.amount || 0)}</td></tr>`).join('')}
+            <tr><td style="padding:8px 16px;font-weight:700;color:${C.ink};border-bottom:1px solid ${C.border};border-top:2px solid ${C.border};">Today's Total</td><td style="padding:8px 16px;text-align:right;font-weight:700;color:${C.ink};border-bottom:1px solid ${C.border};border-top:2px solid ${C.border};">${money(dayTotal + cashIn - tulak - others)}</td></tr>
+            <tr style="background:rgba(127,191,152,0.15);"><td style="padding:10px 16px;font-family:'Fraunces',Georgia,serif;font-weight:700;color:${C.green};">Overall total</td><td style="padding:10px 16px;text-align:right;font-weight:700;font-size:14.5px;color:${C.green};">${money(overall)}</td></tr>
+          </table>
+        </div>
+      </div>`;
+  }
+
+  function generateImage() {
+    if (isGeneratingImage) return;
+    const person = getActivePerson();
+    if (!person || !activeRecord) return;
+
+    isGeneratingImage = true;
+    const exportBtn = document.getElementById('exportImgBtn');
+    if (exportBtn) { exportBtn.disabled = true; exportBtn.textContent = 'Generating…'; }
+
+    const holder = document.createElement('div');
+    holder.style.position = 'fixed';
+    holder.style.left = '-10000px';
+    holder.style.top = '0';
+    holder.style.zIndex = '-1';
+    holder.innerHTML = buildPrintableSheet(person, activeRecord);
+    document.body.appendChild(holder);
+    const target = document.getElementById('printSheetInner');
+
+    // Let fonts/layout settle before capture.
+    setTimeout(() => {
+      html2canvas(target, {
+        scale: 3,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ece7d8'
+      }).then(canvas => {
+        document.body.removeChild(holder);
+        isGeneratingImage = false;
+        if (exportBtn) { exportBtn.disabled = false; exportBtn.textContent = '📷 Save Image'; }
+        const link = document.createElement('a');
+        link.download = `ledger-${person.name.toLowerCase().replace(/\s+/g, '-')}-${activeDate}.png`;
+        link.href = canvas.toDataURL('image/png', 1.0);
+        link.click();
+      }).catch(err => {
+        document.body.removeChild(holder);
+        isGeneratingImage = false;
+        if (exportBtn) { exportBtn.disabled = false; exportBtn.textContent = '📷 Save Image'; }
+        console.error('Image generation failed', err);
+        alert('Could not generate image.');
+      });
+    }, 60);
+  }
+
+  // ---------------- Rendering ----------------
+  let personSearchTerm = '';
+
+  function renderPersonNav() {
+    const list = document.getElementById('personList');
+    const chipRow = document.getElementById('chipRow');
+    list.innerHTML = ''; chipRow.innerHTML = '';
+
+    const term = personSearchTerm.trim().toLowerCase();
+    const filtered = term ? persons.filter(p => p.name.toLowerCase().includes(term)) : persons;
+
+    if (persons.length && !filtered.length) {
+      list.innerHTML = `<div class="no-match-note">No collectors match "${escapeHtml(personSearchTerm.trim())}"</div>`;
+      chipRow.innerHTML = `<div class="no-match-note">No matches</div>`;
+    }
+
+    filtered.forEach(p => {
+      const row = document.createElement('div');
+      row.className = 'person-item' + (p.id === activePersonId ? ' active' : '');
+      row.innerHTML = `
+        <span class="p-name">${escapeHtml(p.name)}</span>
+        <div class="person-actions">
+          <span class="edit-btn" title="Edit name">&#9998;</span>
+          <span class="del-btn" title="Remove">&times;</span>
+        </div>`;
+      
+      // Bind click to the whole container row
+      row.addEventListener('click', () => switchToPerson(p.id));
+
+      row.querySelector('.edit-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        openEditPersonModal(p);
+      });
+      row.querySelector('.del-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (confirm(`Remove ${p.name} and all their records?`)) deletePerson(p.id);
+      });
+      list.appendChild(row);
+
+      const chip = document.createElement('div');
+      chip.className = 'chip' + (p.id === activePersonId ? ' active' : '');
+      chip.textContent = p.name;
+      chip.addEventListener('click', () => switchToPerson(p.id));
+      chipRow.appendChild(chip);
+    });
+
+    const addChip = document.createElement('div');
+    addChip.className = 'chip add-chip';
+    addChip.textContent = '+ Add';
+    addChip.addEventListener('click', openAddPersonModal);
+    chipRow.appendChild(addChip);
+  }
+
+  function renderMain() {
+    const main = document.getElementById('mainArea');
+    const person = getActivePerson();
+
+    if (!person) {
+      main.innerHTML = `
+        <div class="empty-state">
+          <h2>No collector selected</h2>
+          <p>Add a collector to set their per-game share rate and start logging draws. Each collector keeps their own rates and daily entries, synced across your devices.</p>
+        </div>`;
+      return;
+    }
+    if (!activeRecord) { main.innerHTML = `<div class="empty-state"><p>Loading…</p></div>`; return; }
+
+    const record = activeRecord;
+    const { perDraw, dayTotal, overall, cashIn, tulak, others } = computeOverall(person, record);
+    const payoutRates = normalizePayoutRates(person.payoutRates);
+
+    main.innerHTML = `
+      <div id="exportContainer">
+        <div class="ledger-head">
+          <div class="ledger-title">
+            <h1 id="editableTitle" title="Click to edit collector name">${escapeHtml(person.name)}</h1>
+            <div class="sub">daily share ledger</div>
+          </div>
+          <div class="head-actions">
+            <button class="btn-action" id="saveRecordBtn" title="Save this day's entry right now">💾 Save Record</button>
+            <button class="btn-action" id="clearDrawsBtn" title="Clear 2PM–9PM, Cash-in, Tulak and Others — keeps previous balance">🧹 Clear</button>
+            <button class="btn-action" id="exportImgBtn" title="Download ledger as image">📷 Save Image</button>
+            <button class="btn-action" id="backupBtn" title="Download all collectors and entries as a backup file">⬇ Backup</button>
+            <button class="btn-action" id="restoreBtn" title="Restore from a backup file">⬆ Restore</button>
+            <input type="file" id="restoreFileInput" accept="application/json" style="display:none;">
+            <div class="date-field">
+              <label>Date</label>
+              <input type="date" id="dateInput" value="${activeDate}">
+            </div>
+          </div>
+        </div>
+        <div class="rule"></div>
+
+        <div class="rates-panel ${ratesCollapsed ? 'collapsed' : ''}" id="ratesPanel">
+          <div class="rates-panel-head" id="ratesPanelHead">
+            <h3>Share rate<span class="hint">Percentage kept as commission, per game type</span></h3>
+            <span class="chevron">&#9660;</span>
+          </div>
+          <div class="rates-grid">
+            ${GAME_TYPES.map(g => `
+              <div class="rate-field">
+                <label>${g.label}</label>
+                <div class="rate-input-wrap">
+                  <input type="text" inputmode="decimal" data-rate="${g.key}" value="${person.rates[g.key]}">
+                  <span>%</span>
+                </div>
+              </div>`).join('')}
+          </div>
+          <div class="rate-note">Net share = gross bet &times; (1 &minus; rate). Entering a gross amount below shows the calculated net automatically.</div>
+        </div>
+
+        <div class="rates-panel ${payoutCollapsed ? 'collapsed' : ''}" id="payoutPanel">
+          <div class="rates-panel-head" id="payoutPanelHead">
+            <h3>Payout rate<span class="hint">What a winning bet pays, per &#8369;10 wagered — set separately for each draw</span></h3>
+            <span class="chevron">&#9660;</span>
+          </div>
+          ${DRAWS.map(d => `
+            <div class="payout-draw-block">
+              <div class="payout-draw-label">${d}</div>
+              <div class="rates-grid">
+                ${GAME_TYPES.filter(g => (DRAW_ROW_KEYS[d] || []).includes(g.key)).map(g => `
+                  <div class="rate-field">
+                    <label>${g.label}</label>
+                    <div class="rate-input-wrap">
+                      <input type="text" inputmode="decimal" data-payout-draw="${d}" data-payout-game="${g.key}" value="${(payoutRates[d] || {})[g.key]}">
+                      <span>&#8369;</span>
+                    </div>
+                  </div>`).join('')}
+              </div>
+            </div>`).join('')}
+          <div class="rate-note">Payout = winning bet amount &times; (payout rate &divide; 10). Example: &#8369;60 winning on 2-Digit at 5PM's &#8369;${money((payoutRates['5PM'] || {}).L2 || 0)} per &#8369;10 pays &#8369;${money(60 * (((payoutRates['5PM'] || {}).L2 || 0) / 10))}.</div>
+        </div>
+
+        <div class="balance-row">
+          <div class="balance-field">
+            <label>Previous balance</label>
+            <input type="text" inputmode="decimal" id="prevBalanceInput" value="${record.previousBalance === '' || record.previousBalance === null || record.previousBalance === undefined ? '' : round2(record.previousBalance)}" placeholder="0">
+          </div>
+          <button class="btn-action" id="recalcPrevBtn" type="button" title="Pull the latest overall total from the most recent earlier date" style="align-self:flex-end;">↻ Recalculate</button>
+        </div>
+
+        ${DRAWS.map(d => renderDrawBlock(d, record.draws[d], perDraw[d])).join('')}
+
+        <div class="breakdown">
+          <div class="breakdown-head">Breakdown</div>
+          <table>
+            <tr><td>Previous balance</td><td>${money(record.previousBalance || 0)}</td></tr>
+            ${DRAWS.map(d => `<tr><td>${d}</td><td id="bdDrawTotal-${d}">${money(perDraw[d].total)}</td></tr>`).join('')}
+            <tr><td>Cash-in <span style="opacity:0.55;">(+)</span></td><td><input type="text" inputmode="decimal" id="cashInInput" class="breakdown-input" value="${record.cashIn === '' || record.cashIn == null ? '' : round2(record.cashIn)}" placeholder="0"></td></tr>
+            <tr><td>Tulak <span style="opacity:0.55;">(&minus;)</span></td><td><input type="text" inputmode="decimal" id="tulakInput" class="breakdown-input" value="${record.tulak === '' || record.tulak == null ? '' : round2(record.tulak)}" placeholder="0"></td></tr>
+            <tr>
+              <td>Others <span style="opacity:0.55;">(&minus;)</span> <button type="button" id="addOthersBtn" class="mini-add-btn" title="Add another Others entry">+</button></td>
+              <td id="othersHeaderTotal" style="color:var(--red);font-weight:600;">-${money(others)}</td>
+            </tr>
+            ${(record.othersList || []).map((item, idx) => `
+              <tr class="others-item-row">
+                <td colspan="2">
+                  <div class="others-item">
+                    <input type="text" class="others-label-input" data-others-idx="${idx}" value="${escapeHtml(item.label || '')}" placeholder="What for?">
+                    <input type="text" inputmode="decimal" class="others-amount-input breakdown-input" data-others-idx="${idx}" value="${item.amount === '' || item.amount == null ? '' : round2(item.amount)}" placeholder="0">
+                    <button type="button" class="others-remove-btn" data-others-idx="${idx}" title="Remove">&times;</button>
+                  </div>
+                </td>
+              </tr>`).join('')}
+            <tr class="today-total"><td>Today's Total</td><td id="todaysTotalValue">${money(dayTotal + cashIn - tulak - others)}</td></tr>
+            <tr class="overall"><td>Overall total</td><td id="overallTotalValue">${money(overall)}</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="autosave-note"><span class="autosave-dot ${syncBusy ? 'busy' : ''}" id="autosaveDot"></span><span id="autosaveLabel">${dbMode ? 'Synced across your devices' : 'Saved on this device'}</span></div>
+    `;
+
+    attachMainEvents(person, record);
+  }
+
+  function renderDrawBlock(drawName, drawEntry, computed) {
+    const totalClass = computed.total < 0 ? 'neg' : 'pos';
+    const rowTypes = GAME_TYPES.filter(g => (DRAW_ROW_KEYS[drawName] || []).includes(g.key));
+    return `
+      <div class="draw-block">
+        <div class="draw-head">
+          <h3>${drawName}</h3>
+          <div class="draw-total ${totalClass}">${money(computed.total)}</div>
+        </div>
+        <div class="entry-col-labels"><span></span><span>Gross</span><span>Net share</span></div>
+        <div class="entry-rows">
+          ${rowTypes.map(g => {
+            const line = computed.lines.find(l => l.key === g.key);
+            return `
+            <div class="entry-row">
+              <div class="row-label">${g.label}</div>
+              <input type="text" inputmode="decimal" data-draw="${drawName}" data-field="gross" data-game="${g.key}" value="${drawEntry.gross[g.key]}" placeholder="0">
+              <input type="text" class="readonly" value="${money(line.net)}" readonly tabindex="-1">
+            </div>`;
+          }).join('')}
+        </div>
+        <div class="section-label">Hits — winning bet amount, payout is calculated</div>
+        <div class="entry-col-labels"><span></span><span>Winning amt</span><span>Payout</span></div>
+        <div class="entry-rows">
+          ${rowTypes.map(g => {
+            const line = computed.lines.find(l => l.key === g.key);
+            return `
+            <div class="entry-row hits-row">
+              <div class="row-label">${g.label}</div>
+              <input type="text" inputmode="decimal" data-draw="${drawName}" data-field="hits" data-game="${g.key}" value="${drawEntry.hits[g.key]}" placeholder="0">
+              <input type="text" class="readonly" value="${money(line.hitPayout)}" readonly tabindex="-1">
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+  }
+
+  function attachMainEvents(person, record) {
+    document.getElementById('dateInput').addEventListener('change', (e) => switchToDate(e.target.value || todayISO()));
+    
+    const editableTitle = document.getElementById('editableTitle');
+    if (editableTitle) {
+      editableTitle.addEventListener('click', () => openEditPersonModal(person));
+    }
+
+    const saveRecordBtn = document.getElementById('saveRecordBtn');
+    if (saveRecordBtn) {
+      saveRecordBtn.addEventListener('click', () => handleSaveRecordClick(person, record));
+    }
+    const clearDrawsBtn = document.getElementById('clearDrawsBtn');
+    if (clearDrawsBtn) {
+      clearDrawsBtn.addEventListener('click', () => handleClearDrawsClick(person, record));
+    }
+    const recalcPrevBtn = document.getElementById('recalcPrevBtn');
+    if (recalcPrevBtn) {
+      recalcPrevBtn.addEventListener('click', () => handleRecalcPrevBalance(person, record));
+    }
+
+    const exportImgBtn = document.getElementById('exportImgBtn');
+    if (exportImgBtn) {
+      exportImgBtn.addEventListener('click', generateImage);
+    }
+    const backupBtn = document.getElementById('backupBtn');
+    if (backupBtn) backupBtn.addEventListener('click', exportBackup);
+    const restoreBtn = document.getElementById('restoreBtn');
+    const restoreFileInput = document.getElementById('restoreFileInput');
+    if (restoreBtn && restoreFileInput) {
+      restoreBtn.addEventListener('click', () => restoreFileInput.click());
+      restoreFileInput.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (file) importBackup(file);
+        e.target.value = '';
+      });
+    }
+
+    document.getElementById('ratesPanelHead').addEventListener('click', () => { ratesCollapsed = !ratesCollapsed; renderMain(); });
+    document.getElementById('payoutPanelHead').addEventListener('click', () => { payoutCollapsed = !payoutCollapsed; renderMain(); });
+
+    document.querySelectorAll('[data-rate]').forEach(input => {
+      input.addEventListener('click', e => e.stopPropagation());
+      input.addEventListener('input', (e) => {
+        e.target.value = sanitizeNumericInput(e.target.value);
+        updateRate(person.id, e.target.getAttribute('data-rate'), e.target.value);
+        recomputeAndPatchDom(person, record);
+        updateNetCellFromRate(e.target.getAttribute('data-rate'), person, record);
+      });
+    });
+    document.querySelectorAll('[data-payout-draw]').forEach(input => {
+      input.addEventListener('click', e => e.stopPropagation());
+      input.addEventListener('input', (e) => {
+        e.target.value = sanitizeNumericInput(e.target.value);
+        const drawName = e.target.getAttribute('data-payout-draw');
+        const game = e.target.getAttribute('data-payout-game');
+        updatePayout(person.id, drawName, game, e.target.value);
+        recomputeAndPatchDom(person, record);
+        updateHitCell(drawName, game, person, record);
+      });
+    });
+
+    document.getElementById('prevBalanceInput').addEventListener('input', (e) => {
+      e.target.value = sanitizeNumericInput(e.target.value);
+      record.previousBalance = e.target.value;
+      persistRecordDebounced(person.id, activeDate, record);
+      recomputeAndPatchDom(person, record);
+    });
+
+    ['cashInInput', 'tulakInput'].forEach((id) => {
+      const field = { cashInInput: 'cashIn', tulakInput: 'tulak' }[id];
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('input', (e) => {
+        e.target.value = sanitizeNumericInput(e.target.value);
+        record[field] = e.target.value;
+        persistRecordDebounced(person.id, activeDate, record);
+        recomputeAndPatchDom(person, record);
+      });
+    });
+
+    const addOthersBtn = document.getElementById('addOthersBtn');
+    if (addOthersBtn) {
+      addOthersBtn.addEventListener('click', () => {
+        if (!record.othersList) record.othersList = [];
+        record.othersList.push({ id: uid(), label: '', amount: '' });
+        persistRecordDebounced(person.id, activeDate, record);
+        renderMain();
+      });
+    }
+    document.querySelectorAll('.others-label-input').forEach(input => {
+      input.addEventListener('input', (e) => {
+        const idx = parseInt(e.target.getAttribute('data-others-idx'), 10);
+        if (record.othersList && record.othersList[idx]) {
+          record.othersList[idx].label = e.target.value;
+          persistRecordDebounced(person.id, activeDate, record);
+        }
+      });
+    });
+    document.querySelectorAll('.others-amount-input').forEach(input => {
+      input.addEventListener('input', (e) => {
+        e.target.value = sanitizeNumericInput(e.target.value);
+        const idx = parseInt(e.target.getAttribute('data-others-idx'), 10);
+        if (record.othersList && record.othersList[idx]) {
+          record.othersList[idx].amount = e.target.value;
+          persistRecordDebounced(person.id, activeDate, record);
+          recomputeAndPatchDom(person, record);
+        }
+      });
+    });
+    document.querySelectorAll('.others-remove-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const idx = parseInt(e.target.getAttribute('data-others-idx'), 10);
+        if (record.othersList) {
+          record.othersList.splice(idx, 1);
+          persistRecordDebounced(person.id, activeDate, record);
+          renderMain();
+        }
+      });
+    });
+
+    document.querySelectorAll('[data-draw][data-field="gross"]').forEach(input => {
+      input.addEventListener('input', (e) => {
+        e.target.value = sanitizeNumericInput(e.target.value);
+        const drawName = e.target.getAttribute('data-draw');
+        const game = e.target.getAttribute('data-game');
+        record.draws[drawName].gross[game] = e.target.value;
+        persistRecordDebounced(person.id, activeDate, record);
+        updateNetCell(drawName, game, person, record);
+        recomputeAndPatchDom(person, record);
+      });
+    });
+    document.querySelectorAll('[data-draw][data-field="hits"]').forEach(input => {
+      input.addEventListener('input', (e) => {
+        e.target.value = sanitizeNumericInput(e.target.value);
+        const drawName = e.target.getAttribute('data-draw');
+        const game = e.target.getAttribute('data-game');
+        record.draws[drawName].hits[game] = e.target.value;
+        persistRecordDebounced(person.id, activeDate, record);
+        updateHitCell(drawName, game, person, record);
+        recomputeAndPatchDom(person, record);
+      });
+    });
+  }
+
+  function updateNetCell(drawName, game, person, record) {
+    const computed = computeDraw(person, record.draws[drawName], drawName);
+    const line = computed.lines.find(l => l.key === game);
+    const input = document.querySelector(`input[data-draw="${drawName}"][data-field="gross"][data-game="${game}"]`);
+    if (input) { const cell = input.closest('.entry-row').querySelector('.readonly'); if (cell) cell.value = money(line.net); }
+  }
+  function updateHitCell(drawName, game, person, record) {
+    const computed = computeDraw(person, record.draws[drawName], drawName);
+    const line = computed.lines.find(l => l.key === game);
+    const input = document.querySelector(`input[data-draw="${drawName}"][data-field="hits"][data-game="${game}"]`);
+    if (input) { const cell = input.closest('.entry-row').querySelector('.readonly'); if (cell) cell.value = money(line.hitPayout); }
+  }
+  function updateNetCellFromRate(game, person, record) {
+    DRAWS.forEach(d => updateNetCell(d, game, person, record));
+  }
+  function updatePayoutCellsFromRate(game, person, record) {
+    DRAWS.forEach(d => updateHitCell(d, game, person, record));
+  }
+
+  function recomputeAndPatchDom(person, record) {
+    const { perDraw, dayTotal, overall, cashIn, tulak, others } = computeOverall(person, record);
+    document.querySelectorAll('.draw-block').forEach((block, i) => {
+      const d = DRAWS[i];
+      const totalEl = block.querySelector('.draw-total');
+      if (totalEl) { totalEl.textContent = money(perDraw[d].total); totalEl.className = 'draw-total ' + (perDraw[d].total < 0 ? 'neg' : 'pos'); }
+    });
+    DRAWS.forEach(d => {
+      const el = document.getElementById('bdDrawTotal-' + d);
+      if (el) el.textContent = money(perDraw[d].total);
+    });
+    const othersHeaderTotal = document.getElementById('othersHeaderTotal');
+    if (othersHeaderTotal) othersHeaderTotal.textContent = '-' + money(others);
+    const todaysTotalEl = document.getElementById('todaysTotalValue');
+    if (todaysTotalEl) todaysTotalEl.textContent = money(dayTotal + cashIn - tulak - others);
+    const overallEl = document.getElementById('overallTotalValue');
+    if (overallEl) overallEl.textContent = money(overall);
+  }
+
+  function renderAll() { renderPersonNav(); renderMain(); }
+
+  document.getElementById('addPersonBtn').addEventListener('click', () => {
+    const input = document.getElementById('newPersonName');
+    addPerson(input.value);
+    input.value = '';
+  });
+  document.getElementById('newPersonName').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { addPerson(e.target.value); e.target.value = ''; }
+  });
+
+  const searchDesktop = document.getElementById('personSearch');
+  const searchMobile = document.getElementById('personSearchMobile');
+  function onSearchInput(e) {
+    personSearchTerm = e.target.value;
+    if (searchDesktop && e.target !== searchDesktop) searchDesktop.value = personSearchTerm;
+    if (searchMobile && e.target !== searchMobile) searchMobile.value = personSearchTerm;
+    renderPersonNav();
+  }
+  if (searchDesktop) searchDesktop.addEventListener('input', onSearchInput);
+  if (searchMobile) searchMobile.addEventListener('input', onSearchInput);
+
+  async function seedExampleIfNeeded() {
+    let alreadySeeded = false;
+    try { alreadySeeded = localStorage.getItem(SEED_FLAG) === '1'; } catch (e) {}
+    if (alreadySeeded) return;
+    if (persons.some(p => p.name.toLowerCase() === 'davao del norte')) {
+      try { localStorage.setItem(SEED_FLAG, '1'); } catch (e) {}
+      return;
+    }
+    const rates = { L2: 14, S3: 30, D4: 30, P3: 30 };
+    const payoutRates = { L2: 800, S3: 6000, D4: 40000, P3: 4500 };
+    const newId = await addPerson('Davao Del Norte', { rates, payoutRates });
+    if (!newId) return;
+    const person = persons.find(p => p.id === newId) || { id: newId, name: 'Davao Del Norte', rates, payoutRates };
+
+    const record = {
+      previousBalance: 258544,
+      draws: emptyDrawsObj()
+    };
+    record.draws['2PM'].gross.L2 = 6975;
+    record.draws['2PM'].gross.S3 = 5020;
+    record.draws['5PM'].gross.L2 = 4830;
+    record.draws['5PM'].gross.S3 = 3650;
+    record.draws['5PM'].hits.L2 = 10;
+    record.draws['9PM'].gross.L2 = 6560;
+    record.draws['9PM'].gross.S3 = 3777;
+    record.draws['9PM'].gross.D4 = 1890;
+    record.draws['9PM'].hits.L2 = 60;
+
+    await saveRecordImmediate(newId, '2026-09-15', record);
+    try { localStorage.setItem(SEED_FLAG, '1'); } catch (e) {}
+
+    if (activePersonId === newId) { activeDate = '2026-09-15'; switchToDate(activeDate); }
+  }
+
+  async function init() {
+    setSyncStatus('connecting');
+    let dbNs = null;
+    try {
+      if (window.claude && typeof window.claude.use === 'function') dbNs = await window.claude.use('db');
+    } catch (e) { dbNs = null; }
+
+    if (dbNs) {
+      db = dbNs; dbMode = true; setSyncStatus('synced');
+      let firstSnapshot = true;
+      try {
+        db.collection('persons').orderBy('createdAt', 'asc').onSnapshot(async (snap) => {
+          persons = snap.docs.map(d => {
+            const data = d.data() || {};
+            return { id: d.id, name: data.name || 'Unnamed', rates: Object.assign(defaultRates(), data.rates || {}), payoutRates: normalizePayoutRates(data.payoutRates) };
+          });
+          if (firstSnapshot) {
+            firstSnapshot = false;
+            await seedExampleIfNeeded();
+          }
+          if (!activePersonId && persons.length) { switchToPerson(persons[0].id); }
+          else if (activePersonId && !persons.find(p => p.id === activePersonId)) {
+            activePersonId = persons.length ? persons[0].id : null;
+            if (activePersonId) switchToPerson(activePersonId); else { activeRecord = null; renderAll(); }
+          } else { renderPersonNav(); if (activePersonId) renderMain(); }
+        }, (err) => console.error('persons subscription error', err));
+      } catch (e) { console.error(e); dbMode = false; setSyncStatus('local'); loadLocalFallback(); }
+    } else {
+      dbMode = false; setSyncStatus('local'); loadLocalFallback();
+    }
+  }
+
+  async function loadLocalFallback() {
+    const data = lsLoadAll();
+    persons = (data.persons || []).map(p => ({ id: p.id, name: p.name, rates: Object.assign(defaultRates(), p.rates || {}), payoutRates: normalizePayoutRates(p.payoutRates) }));
+    await seedExampleIfNeeded();
+    if (persons.length) { activePersonId = persons[0].id; renderAll(); loadRecord(activePersonId, activeDate); }
+    else { renderAll(); }
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
