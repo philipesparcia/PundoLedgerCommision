@@ -22,6 +22,7 @@
     --gold-soft: #e7d7ac;
     --red: #9c3b34;
     --red-soft: #f0d9d2;
+    --steel: #3d6b8a;
     --text: #1c2521;
     --text-soft: #5b6a60;
     --sidebar-bg: #142019;
@@ -35,7 +36,7 @@
     :root:not([data-theme="light"]) {
       --ink: #e9e4d3; --paper: #1b241d; --paper-line: #34412f; --panel: #212b22;
       --green-deep: #a9d3b8; --green: #7fbf98; --green-bright: #63e0a1;
-      --gold: #d9b466; --gold-soft: #3a3222; --red: #e08a7c; --red-soft: #3a2420;
+      --gold: #d9b466; --gold-soft: #3a3222; --red: #e08a7c; --red-soft: #3a2420; --steel: #7fb5d6;
       --text: #ece7d8; --text-soft: #9aa89e; --sidebar-bg: #0d1410; --sidebar-text: #e3e8de;
       --sidebar-text-dim: #7c9186; --border: #33402f; --shadow: rgba(0,0,0,0.4); --bg: var(--paper);
     }
@@ -43,7 +44,7 @@
   :root[data-theme="dark"] {
     --ink: #e9e4d3; --paper: #1b241d; --paper-line: #34412f; --panel: #212b22;
     --green-deep: #a9d3b8; --green: #7fbf98; --green-bright: #63e0a1;
-    --gold: #d9b466; --gold-soft: #3a3222; --red: #e08a7c; --red-soft: #3a2420;
+    --gold: #d9b466; --gold-soft: #3a3222; --red: #e08a7c; --red-soft: #3a2420; --steel: #7fb5d6;
     --text: #ece7d8; --text-soft: #9aa89e; --sidebar-bg: #0d1410; --sidebar-text: #e3e8de;
     --sidebar-text-dim: #7c9186; --border: #33402f; --shadow: rgba(0,0,0,0.4); --bg: var(--paper);
   }
@@ -111,6 +112,20 @@
   .person-item .edit-btn, .person-item .del-btn { font-size: 14px; color: var(--sidebar-text-dim); padding: 2px 6px; border-radius: 3px; line-height: 1; }
   .person-item .edit-btn:hover { color: var(--green-bright); background: rgba(127,191,152,0.12); }
   .person-item .del-btn:hover { color: var(--red); background: rgba(224,138,124,0.12); }
+  .desktop-collector-row { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+  .desktop-collector-row .person-dropdown {
+    flex: 1; min-width: 0; padding: 10px 10px; border-radius: 4px; font-size: 13.5px;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14);
+    color: var(--sidebar-text); font-family: 'IBM Plex Mono', monospace;
+  }
+  .desktop-collector-row .person-dropdown option { background: var(--sidebar-bg); color: var(--sidebar-text); }
+  .desktop-collector-row .edit-btn, .desktop-collector-row .del-btn {
+    flex: 0 0 auto; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+    border-radius: 4px; cursor: pointer; font-size: 14px; color: var(--sidebar-text-dim);
+    border: 1px solid rgba(255,255,255,0.12);
+  }
+  .desktop-collector-row .edit-btn:hover { color: var(--green-bright); background: rgba(127,191,152,0.12); }
+  .desktop-collector-row .del-btn:hover { color: var(--red); background: rgba(224,138,124,0.12); }
 
   .add-person { display: flex; gap: 6px; margin-top: 4px; }
   .add-person input { flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14); color: var(--sidebar-text); padding: 10px 10px; border-radius: 4px; font-family: 'IBM Plex Mono', monospace; }
@@ -204,6 +219,12 @@
   .entry-row input { width: 100%; text-align: right; font-family: 'IBM Plex Mono', monospace; padding: 9px 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--panel); color: var(--text); }
   .entry-row.hits-row input:not(.readonly) { color: var(--red); }
   .entry-row input.readonly { background: transparent; border-color: transparent; color: var(--green); font-weight: 600; }
+  .entry-row.gross-total-row { border-bottom: none; border-top: 2px solid var(--paper-line); margin-top: 2px; padding-top: 8px; }
+  .entry-row.gross-total-row .row-label { font-weight: 700; color: var(--text); }
+  .entry-row.gross-total-row input.readonly { font-weight: 700; }
+  .entry-row.hits-total-row { border-bottom: none; border-top: 2px solid var(--paper-line); margin-top: 2px; padding-top: 8px; }
+  .entry-row.hits-total-row .row-label { font-weight: 700; color: var(--red); opacity: 1; }
+  .entry-row.hits-total-row input.readonly { font-weight: 700; color: var(--red); }
   .entry-row.hits-row input.readonly { color: var(--red); }
   .section-label { font-size: 11px; color: var(--text-soft); margin: 12px 2px 4px; }
 
@@ -272,7 +293,12 @@
     <div class="person-list">
       <div class="person-list-label">Collectors</div>
       <input id="personSearch" type="text" class="person-search" placeholder="Search collectors…">
-      <div id="personList"></div>
+      <div class="desktop-collector-row">
+        <select id="personDropdownDesktop" class="person-dropdown"></select>
+        <span class="edit-btn" id="editSelectedBtn" title="Edit name">&#9998;</span>
+        <span class="del-btn" id="deleteSelectedBtn" title="Remove">&times;</span>
+      </div>
+      <div id="personListEmpty"></div>
       <div class="add-person">
         <input id="newPersonName" type="text" placeholder="Add collector name">
         <button id="addPersonBtn">+</button>
@@ -873,6 +899,15 @@
           <td style="padding:6px 4px;font-size:13px;text-align:right;font-weight:600;color:${C.green};">${money(line.net)}</td>
         </tr>`;
       }).join('');
+      const grossSum = rowTypes.reduce((sum, g) => {
+        const line = computed.lines.find(l => l.key === g.key);
+        return sum + (line ? line.gross : 0);
+      }, 0);
+      const grossTotalRow = `<tr>
+        <td style="padding:6px 4px;font-size:13px;color:${C.ink};font-weight:700;border-top:1px solid ${C.border};">Total</td>
+        <td style="padding:6px 4px;font-size:13px;text-align:right;font-weight:700;border-top:1px solid ${C.border};">${money(grossSum)}</td>
+        <td style="padding:6px 4px;font-size:13px;text-align:right;font-weight:700;color:${C.green};border-top:1px solid ${C.border};">${money(computed.netSum)}</td>
+      </tr>`;
       const hitRows = rowTypes.map(g => {
         const line = computed.lines.find(l => l.key === g.key);
         return `<tr>
@@ -881,6 +916,15 @@
           <td style="padding:6px 4px;font-size:13px;text-align:right;font-weight:600;color:${C.red};">${money(line.hitPayout)}</td>
         </tr>`;
       }).join('');
+      const hitsWinSum = rowTypes.reduce((sum, g) => {
+        const line = computed.lines.find(l => l.key === g.key);
+        return sum + (line ? line.hitWinAmt : 0);
+      }, 0);
+      const hitsTotalRow = `<tr>
+        <td style="padding:6px 4px;font-size:13px;color:${C.red};font-weight:700;border-top:1px solid ${C.border};">Total</td>
+        <td style="padding:6px 4px;font-size:13px;text-align:right;font-weight:700;color:${C.red};border-top:1px solid ${C.border};">${money(hitsWinSum)}</td>
+        <td style="padding:6px 4px;font-size:13px;text-align:right;font-weight:700;color:${C.red};border-top:1px solid ${C.border};">${money(computed.hitsSum)}</td>
+      </tr>`;
       return `
         <div style="margin-bottom:16px;">
           <div style="display:flex;align-items:baseline;border-bottom:1px solid ${C.border};padding-bottom:6px;margin-bottom:4px;">
@@ -894,6 +938,7 @@
               <td style="padding:2px 4px 4px;font-size:10px;color:${C.textSoft};text-align:right;">Net share</td>
             </tr>
             ${gameRows}
+            ${grossTotalRow}
             <tr>
               <td colspan="3" style="padding:9px 4px 2px;font-size:10px;color:${C.textSoft};border-top:1px dashed ${C.border};">Hits</td>
             </tr>
@@ -903,6 +948,7 @@
               <td style="padding:0 4px 4px;font-size:10px;color:${C.textSoft};text-align:right;">Payout</td>
             </tr>
             ${hitRows}
+            ${hitsTotalRow}
           </table>
         </div>`;
     };
@@ -976,56 +1022,42 @@
   let personSearchTerm = '';
 
   function renderPersonNav() {
-    const list = document.getElementById('personList');
-    const dropdown = document.getElementById('personDropdownMobile');
-    list.innerHTML = '';
-    if (dropdown) dropdown.innerHTML = '';
+    const emptyNote = document.getElementById('personListEmpty');
+    const dropdownDesktop = document.getElementById('personDropdownDesktop');
+    const dropdownMobile = document.getElementById('personDropdownMobile');
+    if (emptyNote) emptyNote.innerHTML = '';
+    if (dropdownDesktop) dropdownDesktop.innerHTML = '';
+    if (dropdownMobile) dropdownMobile.innerHTML = '';
 
     const term = personSearchTerm.trim().toLowerCase();
     const filtered = term ? persons.filter(p => p.name.toLowerCase().includes(term)) : persons;
 
     if (persons.length && !filtered.length) {
-      list.innerHTML = `<div class="no-match-note">No collectors match "${escapeHtml(personSearchTerm.trim())}"</div>`;
-      if (dropdown) {
+      if (emptyNote) emptyNote.innerHTML = `<div class="no-match-note">No collectors match "${escapeHtml(personSearchTerm.trim())}"</div>`;
+      [dropdownDesktop, dropdownMobile].forEach(dropdown => {
+        if (!dropdown) return;
         const opt = document.createElement('option');
         opt.textContent = 'No matches';
         opt.disabled = true;
         opt.selected = true;
         dropdown.appendChild(opt);
-      }
+      });
     }
 
     filtered.forEach(p => {
-      const row = document.createElement('div');
-      row.className = 'person-item' + (p.id === activePersonId ? ' active' : '');
-      row.innerHTML = `
-        <span class="p-name">${escapeHtml(p.name)}</span>
-        <div class="person-actions">
-          <span class="edit-btn" title="Edit name">&#9998;</span>
-          <span class="del-btn" title="Remove">&times;</span>
-        </div>`;
-      
-      // Bind click to the whole container row
-      row.addEventListener('click', () => switchToPerson(p.id));
-
-      row.querySelector('.edit-btn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        openEditPersonModal(p);
-      });
-      row.querySelector('.del-btn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (confirm(`Remove ${p.name} and all their records?`)) deletePerson(p.id);
-      });
-      list.appendChild(row);
-
-      if (dropdown) {
+      [dropdownDesktop, dropdownMobile].forEach(dropdown => {
+        if (!dropdown) return;
         const opt = document.createElement('option');
         opt.value = p.id;
         opt.textContent = p.name;
         if (p.id === activePersonId) opt.selected = true;
         dropdown.appendChild(opt);
-      }
+      });
     });
+
+    if (!filtered.length && !persons.length) {
+      if (emptyNote) emptyNote.innerHTML = `<div class="no-match-note">No collectors yet — add one below.</div>`;
+    }
   }
 
   function renderMain() {
@@ -1154,6 +1186,14 @@
   function renderDrawBlock(drawName, drawEntry, computed) {
     const totalClass = computed.total < 0 ? 'neg' : 'pos';
     const rowTypes = GAME_TYPES.filter(g => (DRAW_ROW_KEYS[drawName] || []).includes(g.key));
+    const grossSum = rowTypes.reduce((sum, g) => {
+      const line = computed.lines.find(l => l.key === g.key);
+      return sum + (line ? line.gross : 0);
+    }, 0);
+    const hitsWinSum = rowTypes.reduce((sum, g) => {
+      const line = computed.lines.find(l => l.key === g.key);
+      return sum + (line ? line.hitWinAmt : 0);
+    }, 0);
     return `
       <div class="draw-block">
         <div class="draw-head">
@@ -1171,6 +1211,11 @@
               <input type="text" class="readonly" value="${money(line.net)}" readonly tabindex="-1">
             </div>`;
           }).join('')}
+          <div class="entry-row gross-total-row">
+            <div class="row-label">Total</div>
+            <input type="text" class="readonly" id="grossTotal-${drawName}" value="${money(grossSum)}" readonly tabindex="-1">
+            <input type="text" class="readonly" id="netTotal-${drawName}" value="${money(computed.netSum)}" readonly tabindex="-1">
+          </div>
         </div>
         <div class="section-label">Hits — winning bet amount, payout is calculated</div>
         <div class="entry-col-labels"><span></span><span>Winning amt</span><span>Payout</span></div>
@@ -1184,6 +1229,11 @@
               <input type="text" class="readonly" value="${money(line.hitPayout)}" readonly tabindex="-1">
             </div>`;
           }).join('')}
+          <div class="entry-row hits-total-row">
+            <div class="row-label">Total</div>
+            <input type="text" class="readonly" id="hitsWinTotal-${drawName}" value="${money(hitsWinSum)}" readonly tabindex="-1">
+            <input type="text" class="readonly" id="hitsPayoutTotal-${drawName}" value="${money(computed.hitsSum)}" readonly tabindex="-1">
+          </div>
         </div>
       </div>`;
   }
@@ -1338,12 +1388,30 @@
     const line = computed.lines.find(l => l.key === game);
     const input = document.querySelector(`input[data-draw="${drawName}"][data-field="gross"][data-game="${game}"]`);
     if (input) { const cell = input.closest('.entry-row').querySelector('.readonly'); if (cell) cell.value = money(line.net); }
+    const rowTypes = GAME_TYPES.filter(g => (DRAW_ROW_KEYS[drawName] || []).includes(g.key));
+    const grossSum = rowTypes.reduce((sum, g) => {
+      const l = computed.lines.find(x => x.key === g.key);
+      return sum + (l ? l.gross : 0);
+    }, 0);
+    const grossTotalEl = document.getElementById('grossTotal-' + drawName);
+    if (grossTotalEl) grossTotalEl.value = money(grossSum);
+    const netTotalEl = document.getElementById('netTotal-' + drawName);
+    if (netTotalEl) netTotalEl.value = money(computed.netSum);
   }
   function updateHitCell(drawName, game, person, record) {
     const computed = computeDraw(person, record.draws[drawName], drawName);
     const line = computed.lines.find(l => l.key === game);
     const input = document.querySelector(`input[data-draw="${drawName}"][data-field="hits"][data-game="${game}"]`);
     if (input) { const cell = input.closest('.entry-row').querySelector('.readonly'); if (cell) cell.value = money(line.hitPayout); }
+    const rowTypes = GAME_TYPES.filter(g => (DRAW_ROW_KEYS[drawName] || []).includes(g.key));
+    const hitsWinSum = rowTypes.reduce((sum, g) => {
+      const l = computed.lines.find(x => x.key === g.key);
+      return sum + (l ? l.hitWinAmt : 0);
+    }, 0);
+    const hitsWinTotalEl = document.getElementById('hitsWinTotal-' + drawName);
+    if (hitsWinTotalEl) hitsWinTotalEl.value = money(hitsWinSum);
+    const hitsPayoutTotalEl = document.getElementById('hitsPayoutTotal-' + drawName);
+    if (hitsPayoutTotalEl) hitsPayoutTotalEl.value = money(computed.hitsSum);
   }
   function updateNetCellFromRate(game, person, record) {
     DRAWS.forEach(d => updateNetCell(d, game, person, record));
@@ -1402,6 +1470,27 @@
   const addPersonBtnMobile = document.getElementById('addPersonBtnMobile');
   if (addPersonBtnMobile) {
     addPersonBtnMobile.addEventListener('click', openAddPersonModal);
+  }
+
+  const personDropdownDesktop = document.getElementById('personDropdownDesktop');
+  if (personDropdownDesktop) {
+    personDropdownDesktop.addEventListener('change', (e) => {
+      if (e.target.value) switchToPerson(e.target.value);
+    });
+  }
+  const editSelectedBtn = document.getElementById('editSelectedBtn');
+  if (editSelectedBtn) {
+    editSelectedBtn.addEventListener('click', () => {
+      const p = getActivePerson();
+      if (p) openEditPersonModal(p);
+    });
+  }
+  const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+  if (deleteSelectedBtn) {
+    deleteSelectedBtn.addEventListener('click', () => {
+      const p = getActivePerson();
+      if (p && confirm(`Remove ${p.name} and all their records?`)) deletePerson(p.id);
+    });
   }
 
   async function seedExampleIfNeeded() {
