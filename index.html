@@ -266,6 +266,50 @@
   }
   .others-remove-btn:hover { background: var(--red-soft); }
 
+  .sidebar-float-group {
+    position: sticky; top: 16px; display: flex; flex-direction: column; gap: 12px;
+    max-height: calc(100vh - 32px); overflow-y: auto;
+  }
+  .sidebar-rates {
+    margin-top: 4px;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+    padding: 12px 14px; max-height: 220px; overflow-y: auto;
+  }
+  .sidebar-rates:empty { display: none; }
+  .sidebar-rates .rates-ref-section-label { color: var(--sidebar-text-dim); }
+  .sidebar-rates .rates-ref-section-label:first-child { margin-top: 0; }
+  .sidebar-rates .rates-ref-row span:first-child { color: var(--sidebar-text-dim); }
+  .sidebar-rates .rates-ref-row span:last-child { color: var(--sidebar-text); }
+  .sidebar-rates .sidebar-rates-title {
+    font-family: 'Fraunces', serif; font-weight: 600; font-size: 13px; color: var(--sidebar-text);
+    padding-bottom: 6px; margin-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .sidebar-calc {
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+    padding: 10px; flex: 0 0 auto; outline: none;
+  }
+  .sidebar-calc:focus-within { border-color: var(--green-bright); }
+  .calc-display {
+    background: rgba(0,0,0,0.25); border-radius: 6px; padding: 12px 10px; margin-bottom: 8px;
+    text-align: right; font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 600;
+    color: var(--sidebar-text); overflow-x: auto; white-space: nowrap;
+  }
+  .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .calc-btn {
+    padding: 10px 0; border-radius: 6px; border: none; background: rgba(255,255,255,0.08);
+    color: var(--sidebar-text); font-family: 'IBM Plex Mono', monospace; font-size: 15px;
+    cursor: pointer;
+  }
+  .calc-btn:active { background: rgba(255,255,255,0.18); }
+  .calc-btn.calc-fn { background: rgba(255,255,255,0.04); color: var(--sidebar-text-dim); font-size: 13px; }
+  .calc-btn.calc-op { background: var(--green-deep); color: var(--gold-soft); font-weight: 700; }
+  .calc-btn.calc-op:active { background: var(--green); }
+  .calc-btn.calc-eq { background: var(--green-bright); color: #0d1410; font-weight: 700; }
+  .calc-btn.calc-eq:active { background: #56a179; }
+  .calc-btn.calc-zero { grid-column: span 2; }
+  .calc-hint { font-size: 10px; color: var(--sidebar-text-dim); text-align: center; margin-top: 8px; }
+
   .autosave-note { margin-top: 16px; font-size: 11.5px; color: var(--text-soft); display: flex; align-items: center; gap: 6px; }
   .autosave-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green-bright); }
   .autosave-dot.busy { background: var(--gold); animation: pulse 1s infinite ease-in-out; }
@@ -281,6 +325,40 @@
   .mini-modal .btn-add { background: var(--green); color: #fff; }
 
   ::selection { background: var(--gold-soft); }
+
+  .hidden { display: none !important; }
+  .rates-ref-btn {
+    position: fixed; left: 20px; bottom: 20px; z-index: 40;
+    width: 52px; height: 52px; border-radius: 50%; border: none;
+    background: var(--green-deep); color: var(--gold-soft); font-size: 22px;
+    cursor: pointer; box-shadow: 0 4px 14px var(--shadow); display: flex; align-items: center; justify-content: center;
+  }
+  .rates-ref-btn:hover { background: var(--green); }
+  .rates-ref-panel {
+    position: fixed; left: 20px; bottom: 82px; z-index: 40;
+    width: 280px; max-height: 60vh; overflow-y: auto;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    box-shadow: 0 8px 28px var(--shadow); padding: 14px 16px 16px;
+  }
+  @media (min-width: 861px) {
+    .rates-ref-btn, .rates-ref-panel { display: none; }
+  }
+  @media (max-width: 480px) {
+    .rates-ref-btn { left: 14px; bottom: 14px; width: 46px; height: 46px; font-size: 19px; }
+    .rates-ref-panel { left: 10px; right: 10px; width: auto; bottom: 70px; }
+  }
+  .rates-ref-head {
+    display: flex; align-items: center; justify-content: space-between;
+    font-family: 'Fraunces', serif; font-weight: 600; font-size: 14px; color: var(--text);
+    padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px solid var(--border);
+  }
+  .rates-ref-close { background: none; border: none; font-size: 18px; color: var(--text-soft); cursor: pointer; line-height: 1; padding: 0 2px; }
+  .rates-ref-section-label { font-size: 10.5px; font-weight: 600; color: var(--text-soft); margin: 10px 0 4px; text-transform: uppercase; letter-spacing: 0.3px; }
+  .rates-ref-section-label:first-of-type { margin-top: 0; }
+  .rates-ref-rows { display: flex; flex-direction: column; gap: 2px; }
+  .rates-ref-row { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; }
+  .rates-ref-row span:first-child { color: var(--text-soft); }
+  .rates-ref-row span:last-child { font-family: 'IBM Plex Mono', monospace; font-weight: 600; color: var(--text); }
 </style>
 </head>
 <body>
@@ -302,6 +380,36 @@
       <div class="add-person">
         <input id="newPersonName" type="text" placeholder="Add collector name">
         <button id="addPersonBtn">+</button>
+      </div>
+    </div>
+
+    <div class="sidebar-float-group">
+      <div id="sidebarRatesRef" class="sidebar-rates"></div>
+
+      <div class="sidebar-calc" id="sidebarCalc" tabindex="0">
+        <div class="calc-display" id="calcDisplay">0</div>
+        <div class="calc-grid">
+          <button type="button" class="calc-btn calc-fn" data-calc-action="clear">C</button>
+          <button type="button" class="calc-btn calc-fn" data-calc-action="backspace">&#9003;</button>
+          <button type="button" class="calc-btn calc-fn" data-calc-action="percent">%</button>
+          <button type="button" class="calc-btn calc-op" data-calc-op="&divide;">&divide;</button>
+          <button type="button" class="calc-btn" data-calc-digit="7">7</button>
+          <button type="button" class="calc-btn" data-calc-digit="8">8</button>
+          <button type="button" class="calc-btn" data-calc-digit="9">9</button>
+          <button type="button" class="calc-btn calc-op" data-calc-op="&times;">&times;</button>
+          <button type="button" class="calc-btn" data-calc-digit="4">4</button>
+          <button type="button" class="calc-btn" data-calc-digit="5">5</button>
+          <button type="button" class="calc-btn" data-calc-digit="6">6</button>
+          <button type="button" class="calc-btn calc-op" data-calc-op="&minus;">&minus;</button>
+          <button type="button" class="calc-btn" data-calc-digit="1">1</button>
+          <button type="button" class="calc-btn" data-calc-digit="2">2</button>
+          <button type="button" class="calc-btn" data-calc-digit="3">3</button>
+          <button type="button" class="calc-btn calc-op" data-calc-op="+">+</button>
+          <button type="button" class="calc-btn calc-zero" data-calc-digit="0">0</button>
+          <button type="button" class="calc-btn" data-calc-digit=".">.</button>
+          <button type="button" class="calc-btn calc-eq" data-calc-action="equals">=</button>
+        </div>
+        <div class="calc-hint">Click here, then use your keyboard/numpad too</div>
       </div>
     </div>
 
@@ -1070,6 +1178,8 @@
           <h2>No collector selected</h2>
           <p>Add a collector to set their per-game share rate and start logging draws. Each collector keeps their own rates and daily entries, synced across your devices.</p>
         </div>`;
+      const sidebarRatesEmpty = document.getElementById('sidebarRatesRef');
+      if (sidebarRatesEmpty) sidebarRatesEmpty.innerHTML = '';
       return;
     }
     if (!activeRecord) { main.innerHTML = `<div class="empty-state"><p>Loading…</p></div>`; return; }
@@ -1178,11 +1288,56 @@
       </div>
 
       <div class="autosave-note"><span class="autosave-dot ${syncBusy ? 'busy' : ''}" id="autosaveDot"></span><span id="autosaveLabel">${dbMode ? 'Synced across your devices' : 'Saved on this device'}</span></div>
+
+      <button type="button" id="ratesRefBtn" class="rates-ref-btn" title="View share &amp; payout rates">&#128203;</button>
+      <div id="ratesRefPanel" class="rates-ref-panel hidden">
+        ${buildRatesRefHtml(person, payoutRates)}
+      </div>
     `;
 
     attachMainEvents(person, record);
+
+    const sidebarRates = document.getElementById('sidebarRatesRef');
+    if (sidebarRates) {
+      sidebarRates.innerHTML = `<div class="sidebar-rates-title">Rates — ${escapeHtml(person.name)}</div>` + buildRatesRowsHtml(person, payoutRates);
+    }
   }
 
+  function buildRatesRowsHtml(person, payoutRates) {
+    return `
+      <div class="rates-ref-section-label">Share rate</div>
+      <div class="rates-ref-rows">
+        ${GAME_TYPES.map(g => `<div class="rates-ref-row"><span>${g.label}</span><span>${money(person.rates[g.key])}%</span></div>`).join('')}
+      </div>
+      ${DRAWS.map(d => `
+        <div class="rates-ref-section-label">${d} Payout <span style="opacity:0.6;font-weight:400;">(per &#8369;10)</span></div>
+        <div class="rates-ref-rows">
+          ${GAME_TYPES.filter(g => (DRAW_ROW_KEYS[d] || []).includes(g.key)).map(g => `<div class="rates-ref-row"><span>${g.label}</span><span>&#8369;${money((payoutRates[d] || {})[g.key] || 0)}</span></div>`).join('')}
+        </div>`).join('')}
+    `;
+  }
+  function buildRatesRefHtml(person, payoutRates) {
+    return `
+      <div class="rates-ref-head">
+        <span>Rates — ${escapeHtml(person.name)}</span>
+        <button type="button" id="ratesRefCloseBtn" class="rates-ref-close" title="Close">&times;</button>
+      </div>
+      ${buildRatesRowsHtml(person, payoutRates)}
+    `;
+  }
+  function refreshRatesRefPanel(person) {
+    const payoutRates = normalizePayoutRates(person.payoutRates);
+    const panel = document.getElementById('ratesRefPanel');
+    if (panel) {
+      panel.innerHTML = buildRatesRefHtml(person, payoutRates);
+      const closeBtn = document.getElementById('ratesRefCloseBtn');
+      if (closeBtn) closeBtn.addEventListener('click', () => panel.classList.add('hidden'));
+    }
+    const sidebarRates = document.getElementById('sidebarRatesRef');
+    if (sidebarRates) {
+      sidebarRates.innerHTML = `<div class="sidebar-rates-title">Rates — ${escapeHtml(person.name)}</div>` + buildRatesRowsHtml(person, payoutRates);
+    }
+  }
   function renderDrawBlock(drawName, drawEntry, computed) {
     const totalClass = computed.total < 0 ? 'neg' : 'pos';
     const rowTypes = GAME_TYPES.filter(g => (DRAW_ROW_KEYS[drawName] || []).includes(g.key));
@@ -1286,6 +1441,7 @@
         updateRate(person.id, e.target.getAttribute('data-rate'), e.target.value);
         recomputeAndPatchDom(person, record);
         updateNetCellFromRate(e.target.getAttribute('data-rate'), person, record);
+        refreshRatesRefPanel(person);
       });
     });
     document.querySelectorAll('[data-payout-draw]').forEach(input => {
@@ -1297,8 +1453,21 @@
         updatePayout(person.id, drawName, game, e.target.value);
         recomputeAndPatchDom(person, record);
         updateHitCell(drawName, game, person, record);
+        refreshRatesRefPanel(person);
       });
     });
+
+    const ratesRefBtn = document.getElementById('ratesRefBtn');
+    const ratesRefPanel = document.getElementById('ratesRefPanel');
+    if (ratesRefBtn && ratesRefPanel) {
+      ratesRefBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        ratesRefPanel.classList.toggle('hidden');
+      });
+      ratesRefPanel.addEventListener('click', e => e.stopPropagation());
+      const closeBtn = document.getElementById('ratesRefCloseBtn');
+      if (closeBtn) closeBtn.addEventListener('click', () => ratesRefPanel.classList.add('hidden'));
+    }
 
     document.getElementById('prevBalanceInput').addEventListener('input', (e) => {
       e.target.value = sanitizeNumericInput(e.target.value);
@@ -1566,6 +1735,100 @@
     if (persons.length) { activePersonId = persons[0].id; renderAll(); loadRecord(activePersonId, activeDate); }
     else { renderAll(); }
   }
+
+  document.addEventListener('click', (e) => {
+    const panel = document.getElementById('ratesRefPanel');
+    const btn = document.getElementById('ratesRefBtn');
+    if (panel && !panel.classList.contains('hidden') && !panel.contains(e.target) && e.target !== btn) {
+      panel.classList.add('hidden');
+    }
+  });
+
+  // ---------------- Sidebar calculator (standalone, not tied to any collector) ----------------
+  (function initSidebarCalculator() {
+    const display = document.getElementById('calcDisplay');
+    const grid = document.querySelector('.sidebar-calc .calc-grid');
+    if (!display || !grid) return;
+
+    let calcValue = '0';
+    let calcPrev = null;
+    let calcOp = null;
+    let calcWaiting = false;
+
+    function render() { display.textContent = calcValue; }
+
+    function inputDigit(d) {
+      if (calcWaiting) { calcValue = d === '.' ? '0.' : d; calcWaiting = false; }
+      else if (d === '.') { if (!calcValue.includes('.')) calcValue += '.'; }
+      else { calcValue = (calcValue === '0') ? d : calcValue + d; }
+      render();
+    }
+    function clearAll() { calcValue = '0'; calcPrev = null; calcOp = null; calcWaiting = false; render(); }
+    function backspace() {
+      if (calcWaiting) return;
+      calcValue = calcValue.length > 1 ? calcValue.slice(0, -1) : '0';
+      render();
+    }
+    function percent() { calcValue = String(round2(parseFloat(calcValue) / 100)); render(); }
+    function compute(a, b, op) {
+      if (op === '+') return a + b;
+      if (op === '\u2212') return a - b;
+      if (op === '\u00d7') return a * b;
+      if (op === '\u00f7') return b === 0 ? 0 : a / b;
+      return b;
+    }
+    function applyOperator(nextOp) {
+      const input = parseFloat(calcValue);
+      if (calcPrev === null) { calcPrev = input; }
+      else if (calcOp) {
+        const result = compute(calcPrev, input, calcOp);
+        calcValue = String(round2(result));
+        calcPrev = result;
+      }
+      calcWaiting = true;
+      calcOp = nextOp;
+      render();
+    }
+    function equals() {
+      const input = parseFloat(calcValue);
+      if (calcOp !== null && calcPrev !== null) {
+        const result = compute(calcPrev, input, calcOp);
+        calcValue = String(round2(result));
+        calcPrev = null;
+        calcOp = null;
+        calcWaiting = true;
+        render();
+      }
+    }
+
+    grid.addEventListener('click', (e) => {
+      const btn = e.target.closest('.calc-btn');
+      if (!btn) return;
+      if (btn.dataset.calcDigit !== undefined) inputDigit(btn.dataset.calcDigit);
+      else if (btn.dataset.calcOp) applyOperator(btn.dataset.calcOp);
+      else if (btn.dataset.calcAction === 'clear') clearAll();
+      else if (btn.dataset.calcAction === 'backspace') backspace();
+      else if (btn.dataset.calcAction === 'percent') percent();
+      else if (btn.dataset.calcAction === 'equals') equals();
+    });
+
+    // Keyboard + numpad support: click into the calculator (or tab to it) to focus it, then type.
+    const calcContainer = document.getElementById('sidebarCalc');
+    if (calcContainer) {
+      calcContainer.addEventListener('keydown', (e) => {
+        if (e.key >= '0' && e.key <= '9') { inputDigit(e.key); e.preventDefault(); }
+        else if (e.key === '.' || e.key === 'Decimal') { inputDigit('.'); e.preventDefault(); }
+        else if (e.key === '+' || e.key === 'Add') { applyOperator('+'); e.preventDefault(); }
+        else if (e.key === '-' || e.key === 'Subtract') { applyOperator('\u2212'); e.preventDefault(); }
+        else if (e.key === '*' || e.key === 'Multiply') { applyOperator('\u00d7'); e.preventDefault(); }
+        else if (e.key === '/' || e.key === 'Divide') { applyOperator('\u00f7'); e.preventDefault(); }
+        else if (e.key === 'Enter' || e.key === '=') { equals(); e.preventDefault(); }
+        else if (e.key === 'Backspace') { backspace(); e.preventDefault(); }
+        else if (e.key === 'Escape' || e.key === 'Delete' || e.key === 'Clear') { clearAll(); e.preventDefault(); }
+        else if (e.key === '%') { percent(); e.preventDefault(); }
+      });
+    }
+  })();
 
   init();
 })();
